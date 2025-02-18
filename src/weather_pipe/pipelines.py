@@ -41,7 +41,7 @@ def run_raw_layer(config_path: str) -> Result[bool, Exception]:
     )
     init_save_parquet = partial(
         io.save_parquet,
-        save_path=f"{REPO_ROOT}/{config.get('save_dir')}/{api_config.location}/{filename}.parquet",
+        save_path=f"{REPO_ROOT.joinpath(config.get('save_dir'), api_config.location)}/{filename}.parquet",
     )
 
     pipeline = pipe(
