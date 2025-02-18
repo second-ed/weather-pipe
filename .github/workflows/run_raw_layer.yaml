@@ -27,7 +27,9 @@ jobs:
         run: uv sync
 
       - name: run at 1am UTC
-        run: uv run ./src/weather_pipe/000_raw_pipe.py --config-path ./configs/raw_layer.yaml --api-key ${{ secrets.WEATHER_API_KEY }}
+        run: |
+          git status
+          uv run ./src/weather_pipe/000_raw_pipe.py --config-path ./configs/raw_layer.yaml --api-key ${{ secrets.WEATHER_API_KEY }}
 
       - name: GIT commit and push data
         env:
@@ -37,6 +39,8 @@ jobs:
         run: |
           git config --global user.name "${{ env.CI_COMMIT_AUTHOR }}"
           git config --global user.email "username@users.noreply.github.com"
+          git checkout db
+          git status
           git add data
           git commit -m "${{ env.CI_COMMIT_MESSAGE }}" || echo "No changes to commit"
           git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git main
