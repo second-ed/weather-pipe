@@ -38,5 +38,3 @@ def save_parquet(df: pl.DataFrame, save_path: str) -> Result[bool, Exception]:
         return Success(True)
     except Exception as e:
         return Failure({"err": str(e)})
-
-

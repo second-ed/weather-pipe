@@ -1,0 +1,9 @@
+api_config:
+  location: Liverpool
+  request_type: forecast
+table_path:
+- forecast
+- forecastday
+- 0
+- hour
+save_dir: data/raw

@@ -1,13 +1,12 @@
 import uuid
 from copy import deepcopy
 from datetime import datetime
-from typing import Any
 
 import polars as pl
 from returns.result import Failure, Result, Success
 
 
-def get_table_from_json(data: dict, table_path: list) -> Result[dict[str, Any], Exception]:
+def convert_json_to_df(data: dict, table_path: list) -> Result[pl.DataFrame, Exception]:
     data = deepcopy(data)
     try:
         for level in table_path:
@@ -20,14 +19,15 @@ def get_table_from_json(data: dict, table_path: list) -> Result[dict[str, Any], 
                     continue
                 else:
                     return Failure({"err": "invalid level given for list"})
-        return Success(data)
+        return Success(pl.DataFrame(data))
     except Exception as e:
         return Failure({"err": str(e)})
 
 
-def add_ingestion_columns(data: dict, batch_guid: str, date_time: datetime) -> Result[pl.DataFrame, Exception]:
+def add_ingestion_columns(
+    df: pl.DataFrame, batch_guid: str, date_time: datetime
+) -> Result[pl.DataFrame, Exception]:
     try:
-        df = pl.DataFrame(data)
         df = df.with_columns(
             pl.Series("row_guid", [str(uuid.uuid4()) for _ in range(len(df))]),
             pl.lit(batch_guid).alias("batch_guid"),
@@ -36,5 +36,3 @@ def add_ingestion_columns(data: dict, batch_guid: str, date_time: datetime) -> R
         return Success(df)
     except Exception as e:
         return Failure({"err": str(e)})
-
-
