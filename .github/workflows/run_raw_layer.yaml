@@ -29,6 +29,7 @@ jobs:
       - name: run at 1am UTC
         run: |
           git status
+          git pull
           uv run ./src/weather_pipe/000_raw_pipe.py --config-path ./configs/raw_layer.yaml --api-key ${{ secrets.WEATHER_API_KEY }}
 
       - name: GIT commit and push data
