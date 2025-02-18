@@ -11,6 +11,7 @@ from returns.result import Failure, Result
 from weather_pipe import io
 from weather_pipe.data_structures import ApiConfig
 from weather_pipe.transform import add_ingestion_columns, convert_json_to_df
+from weather_pipe.utils import clean_str
 
 REPO_ROOT = Path(__file__).parents[2]
 
@@ -28,7 +29,8 @@ def run_raw_layer(config_path: str, api_key: str) -> Result[bool, Exception]:
         location=config.get("api_config", {}).get("location"),
         request_type=config.get("api_config", {}).get("request_type"),
     )
-    filename = f"{date_time.strftime('%y%m%d_%H%M%S')}_{api_config.request_type}_{api_config.location}"
+    cleaned_location = clean_str(api_config.location)
+    filename = f"{date_time.strftime('%y%m%d_%H%M%S')}_{api_config.request_type}_{cleaned_location}"
 
     init_convert_json_to_df = partial(
         convert_json_to_df, table_path=config.get("table_path", [])
@@ -38,7 +40,7 @@ def run_raw_layer(config_path: str, api_key: str) -> Result[bool, Exception]:
     )
     init_save_parquet = partial(
         io.save_parquet,
-        save_path=f"{REPO_ROOT.joinpath(config.get('save_dir'), api_config.location)}/{filename}.parquet",
+        save_path=f"{REPO_ROOT.joinpath(config.get('save_dir'), cleaned_location)}/{filename}.parquet",
     )
 
     pipeline = pipe(
