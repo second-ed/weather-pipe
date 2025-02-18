@@ -6,7 +6,7 @@ import requests
 import yaml
 from returns.result import Failure, Result, Success
 
-from .data_structures import ApiConfig
+from weather_pipe.data_structures import ApiConfig
 
 
 def load_yaml(path: str) -> Result[dict, Exception]:
