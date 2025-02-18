@@ -1,10 +1,9 @@
-import os
+import argparse
 import uuid
 from datetime import datetime
 from functools import partial
 from pathlib import Path
 
-from dotenv import load_dotenv
 from returns.pipeline import pipe
 from returns.pointfree import bind
 from returns.result import Failure, Result
@@ -14,11 +13,9 @@ from .data_structures import ApiConfig
 from .transform import add_ingestion_columns, convert_json_to_df
 
 REPO_ROOT = Path(__file__).parents[2]
-API_PATH = REPO_ROOT.joinpath("envs/.env")
-load_dotenv(API_PATH)
 
 
-def run_raw_layer(config_path: str) -> Result[bool, Exception]:
+def run_raw_layer(config_path: str, api_key: str) -> Result[bool, Exception]:
     config_res = io.load_yaml(config_path)
     if isinstance(config_res, Failure):
         return Failure({"err": config_res.failure()})
@@ -27,7 +24,7 @@ def run_raw_layer(config_path: str) -> Result[bool, Exception]:
     batch_guid = str(uuid.uuid4())
     date_time = datetime.now()
     api_config = ApiConfig(
-        api_key=os.getenv("WEATHER_API_KEY"),
+        api_key=api_key,
         location=config.get("api_config", {}).get("location"),
         request_type=config.get("api_config", {}).get("request_type"),
     )
@@ -52,3 +49,12 @@ def run_raw_layer(config_path: str) -> Result[bool, Exception]:
     )
 
     return pipeline(api_config)
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Parse config path and API key.")
+    parser.add_argument("config_path", type=str, help="Path to the configuration file")
+    parser.add_argument("api_key", type=str, help="API key for authentication")
+    args = parser.parse_args()
+
+    run_raw_layer(args.config_path, args.api_key)
