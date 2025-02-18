@@ -13,7 +13,6 @@ from . import io
 from .data_structures import ApiConfig
 from .transform import add_ingestion_columns, convert_json_to_df
 
-
 REPO_ROOT = Path(__file__).parents[2]
 API_PATH = REPO_ROOT.joinpath("envs/.env")
 load_dotenv(API_PATH)
