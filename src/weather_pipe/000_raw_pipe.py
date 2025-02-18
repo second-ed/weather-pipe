@@ -8,9 +8,9 @@ from returns.pipeline import pipe
 from returns.pointfree import bind
 from returns.result import Failure, Result
 
-from . import io
-from .data_structures import ApiConfig
-from .transform import add_ingestion_columns, convert_json_to_df
+from weather_pipe import io
+from weather_pipe.data_structures import ApiConfig
+from weather_pipe.transform import add_ingestion_columns, convert_json_to_df
 
 REPO_ROOT = Path(__file__).parents[2]
 
@@ -53,8 +53,10 @@ def run_raw_layer(config_path: str, api_key: str) -> Result[bool, Exception]:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Parse config path and API key.")
-    parser.add_argument("config_path", type=str, help="Path to the configuration file")
-    parser.add_argument("api_key", type=str, help="API key for authentication")
+    parser.add_argument(
+        "--config-path", type=str, help="Path to the configuration file"
+    )
+    parser.add_argument("--api-key", type=str, help="API key for authentication")
     args = parser.parse_args()
 
-    run_raw_layer(args.config_path, args.api_key)
+    print(run_raw_layer(args.config_path, args.api_key))
