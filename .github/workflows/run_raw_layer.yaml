@@ -32,6 +32,12 @@ jobs:
           git pull origin main
           uv run ./src/weather_pipe/000_raw_pipe.py --config-path ./configs/raw_layer.yaml --api-key ${{ secrets.WEATHER_API_KEY }}
 
+      - name: Checkout branch
+        run: |
+          git fetch origin main
+          git checkout main
+          git pull origin main
+
       - name: commit and push data
         env:
           CI_COMMIT_MESSAGE: "run: raw layer"
