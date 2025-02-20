@@ -7,8 +7,10 @@ import yaml
 from returns.result import Failure, Result, Success
 
 from weather_pipe.data_structures import ApiConfig
+from weather_pipe.utils import log_call
 
 
+@log_call
 def load_yaml(path: str) -> Result[dict, Exception]:
     try:
         with open(path, "r") as f:
@@ -22,6 +24,7 @@ def load_yaml(path: str) -> Result[dict, Exception]:
         return Failure({"err": str(e), "path": path})
 
 
+@log_call
 def extract_data(api_config: ApiConfig) -> Result[dict[str, Any], Exception]:
     call = f"http://api.weatherapi.com/v1/{api_config.request_type}.json?key={api_config.api_key}&q={api_config.location}&aqi=no"
     response = requests.get(call, timeout=10)
@@ -31,6 +34,7 @@ def extract_data(api_config: ApiConfig) -> Result[dict[str, Any], Exception]:
     return Failure(response)
 
 
+@log_call
 def save_parquet(df: pl.DataFrame, save_path: str) -> Result[bool, Exception]:
     try:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)

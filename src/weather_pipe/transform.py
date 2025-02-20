@@ -5,7 +5,10 @@ from datetime import datetime
 import polars as pl
 from returns.result import Failure, Result, Success
 
+from weather_pipe.utils import log_call
 
+
+@log_call
 def convert_json_to_df(data: dict, table_path: list) -> Result[pl.DataFrame, Exception]:
     data = deepcopy(data)
     try:
@@ -24,6 +27,7 @@ def convert_json_to_df(data: dict, table_path: list) -> Result[pl.DataFrame, Exc
         return Failure({"err": str(e)})
 
 
+@log_call
 def add_ingestion_columns(
     df: pl.DataFrame, batch_guid: str, date_time: datetime
 ) -> Result[pl.DataFrame, Exception]:
