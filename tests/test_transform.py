@@ -30,12 +30,10 @@ def test_add_ingestion_columns(df, batch_guid, date_time, err):
     result = add_ingestion_columns(df, batch_guid, date_time)
 
     match result:
-        case Success(df):
-            inner = result.unwrap()
+        case Success(inner):
             assert inner["row_guid"].n_unique() == len(inner)
             assert inner["batch_guid"].eq(batch_guid).all()
             assert inner["ingestion_datetime"].eq(date_time).all()
 
-        case Failure(err):
-            inner = result.failure()
+        case Failure(inner):
             assert inner == err
