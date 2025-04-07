@@ -5,10 +5,16 @@ from logging.config import dictConfig
 from pathlib import Path
 from typing import Callable
 
+import attrs
 import structlog
+from dotenv import load_dotenv
 
 REPO_ROOT = Path(__file__).parents[2]
 os.makedirs(REPO_ROOT.joinpath("data/logs"), exist_ok=True)
+ENV_PATH = str(REPO_ROOT.joinpath("envs/.env"))
+
+
+load_dotenv(ENV_PATH)
 
 dictConfig(
     {
@@ -30,17 +36,35 @@ dictConfig(
     }
 )
 
-structlog.configure_once(
-    processors=[
-        structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.add_log_level,
-        structlog.processors.JSONRenderer(indent=4),
-    ],
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    cache_logger_on_first_use=True,
-)
+if os.getenv("LOGGING", "true") == "true":
+    structlog.configure_once(
+        processors=[
+            structlog.processors.TimeStamper(fmt="iso"),
+            structlog.processors.add_log_level,
+            structlog.processors.JSONRenderer(indent=4),
+        ],
+        logger_factory=structlog.stdlib.LoggerFactory(),
+        cache_logger_on_first_use=True,
+    )
 
-log = structlog.get_logger()
+    log = structlog.get_logger()
+else:
+
+    @attrs.define
+    class Logger:
+        def debug(self, *args, **kwargs):
+            print(f"DEBUG: {args = } {kwargs = }")
+
+        def info(self, *args, **kwargs):
+            print(f"INFO:  {args = } {kwargs = }")
+
+        def error(self, *args, **kwargs):
+            print(f"ERROR: {args = } {kwargs = }")
+
+        def warning(self, *args, **kwargs):
+            print(f"WARNING: {args = } {kwargs = }")
+
+    log = Logger()
 
 
 def log_call(func: Callable) -> Callable:
