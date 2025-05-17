@@ -6,11 +6,11 @@ import structlog
 
 @runtime_checkable
 class LoggerProtocol(Protocol):
-    def debug(self, msg: str) -> None: ...
+    def debug(self, msg: str, **kwargs: Any) -> None: ...
 
-    def info(self, msg: str) -> None: ...
+    def info(self, msg: str, **kwargs: Any) -> None: ...
 
-    def error(self, msg: str) -> None: ...
+    def error(self, msg: str, **kwargs: Any) -> None: ...
 
 
 @attrs.define
@@ -31,11 +31,11 @@ class StructLogger:
 class FakeLogger(LoggerProtocol):
     log: list = attrs.field(default=attrs.Factory(list))
 
-    def debug(self, msg: str) -> None:
+    def debug(self, msg: str, **kwargs: Any) -> None:
         self.log.append(f"DEBUG: {msg}")
 
-    def info(self, msg: str) -> None:
+    def info(self, msg: str, **kwargs: Any) -> None:
         self.log.append(f"INFO: {msg}")
 
-    def error(self, msg: str) -> None:
+    def error(self, msg: str, **kwargs: Any) -> None:
         self.log.append(f"ERROR: {msg}")
