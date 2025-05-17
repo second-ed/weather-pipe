@@ -32,4 +32,6 @@ def test_raw_pipe():
 
     # make sure guids in all logs
     assert all("{'guid': " in log for log in bus.uow.logger.log)
+
+    # the pipe should've successfully ran
     assert any("'result': <Success: True>" in log for log in bus.uow.logger.log)

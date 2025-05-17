@@ -41,7 +41,7 @@ def raw_layer_handler(event: IngestToRawZone, uow: UnitOfWorkProtocol):
         filename = f"{uow.start_time}_{api_config.request_type}_{cleaned_location}"
         init_write_parquet = partial(
             uow.repo.write_parquet,
-            path=f"{REPO_ROOT.joinpath(config.get('save_dir'), cleaned_location)}/{filename}.parquet",
+            path=f"{REPO_ROOT.joinpath(config.get('save_dir', ''), cleaned_location)}/{filename}.parquet",
         )
 
         pipeline = pipe(

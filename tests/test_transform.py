@@ -6,7 +6,7 @@ from hypothesis import given
 from hypothesis.strategies import text
 from returns.result import Failure, Success
 
-from src.weather_pipe.transform import add_ingestion_columns, clean_str
+from weather_pipe.transform import add_ingestion_columns, clean_str
 
 
 @pytest.mark.parametrize(
