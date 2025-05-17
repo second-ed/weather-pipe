@@ -53,17 +53,3 @@ def test_raw_pipe(args, expected_result):
 
     # the pipe should've logged the expected result
     assert any(expected_result in log for log in bus.uow.logger.log)
-
-    # raw_keys = [
-    #     key
-    #     for key in bus.uow.repo.db.keys()
-    #     if key.startswith(f"{args['repo_root']}/data/raw")
-    # ]
-    # assert raw_keys
-    # raw_key = raw_keys[0]
-    # raw_df = bus.uow.repo.db[raw_key]
-
-    # assert all(
-    #     col in raw_df.columns
-    #     for col in ["row_guid", "batch_guid", "ingestion_datetime"]
-    # )

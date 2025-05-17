@@ -18,7 +18,12 @@ class IngestToRawZone(Event):
     api_key: str = attrs.field(default="", repr=False)
 
 
-def parse_event(msg: dict) -> Event:
+def parse_event(msg: dict | Event) -> Event:
+    # can put this between each stage
+    # and return early if not need to parse
+    if isinstance(msg, Event):
+        return msg
+
     # go from most specific to least
     match msg:
         case {"config_path": _, "api_key": _, "repo_root": _}:

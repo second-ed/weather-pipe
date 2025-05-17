@@ -4,7 +4,7 @@ from collections.abc import Sequence
 import attrs
 from attrs.validators import instance_of
 
-from weather_pipe.events import Event
+from weather_pipe.events import Event, parse_event
 from weather_pipe.handlers import EventHandlers
 from weather_pipe.uow import UnitOfWorkProtocol
 
@@ -25,6 +25,9 @@ class MessageBus:
     def handle_event(self):
         event = self.queue.popleft()
         result = self.event_handlers[type(event)](event, self.uow)
+
+        if isinstance(result, dict):
+            result = parse_event(result)
 
         if isinstance(result, Event):
             if result.priority_event:
