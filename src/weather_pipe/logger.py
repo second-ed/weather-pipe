@@ -39,15 +39,3 @@ class FakeLogger(LoggerProtocol):
 
     def error(self, msg: str) -> None:
         self.log.append(f"ERROR: {msg}")
-
-    def warning(self, msg: str) -> None:
-        self.log.append(f"WARNING: {msg}")
-
-    def warn(self, msg: str) -> None:
-        self.log.append(f"WARN: {msg}")
-
-    def fatal(self, msg: str) -> None:
-        self.log.append(f"FATAL: {msg}")
-
-    def critical(self, msg: str) -> None:
-        self.log.append(f"CRITICAL: {msg}")
