@@ -1,7 +1,6 @@
 import re
 import uuid
 from copy import deepcopy
-from datetime import datetime
 
 import polars as pl
 from returns.result import Failure, Result, Success
@@ -26,7 +25,7 @@ def convert_json_to_df(data: dict, table_path: list) -> Result[pl.DataFrame, Exc
 
 
 def add_ingestion_columns(
-    df: pl.DataFrame, batch_guid: str, date_time: datetime
+    df: pl.DataFrame, batch_guid: str, date_time: str
 ) -> Result[pl.DataFrame, Exception]:
     try:
         df = df.with_columns(

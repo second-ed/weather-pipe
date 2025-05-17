@@ -1,5 +1,4 @@
 from functools import partial
-from pathlib import Path
 from typing import Callable, Sequence
 
 from returns.pipeline import pipe
@@ -13,15 +12,13 @@ from weather_pipe.uow import UnitOfWorkProtocol
 
 EventHandlers = dict[type, Callable[[Event], Event | Sequence[Event] | None]]
 
-REPO_ROOT = Path(__file__).parents[2]
-
 
 def raw_layer_handler(event: IngestToRawZone, uow: UnitOfWorkProtocol):
     with uow:
         uow.logger.info({"guid": uow.guid, "event": event})
         config_res = uow.repo.read_yaml(event.config_path)
         if isinstance(config_res, Failure):
-            uow.logger.error({"guid": uow.guid, "result": config_res.failure()})
+            uow.logger.error({"guid": uow.guid, "result": config_res})
             return Failure({"err": config_res.failure()})
         config = config_res.unwrap()
 
@@ -41,7 +38,7 @@ def raw_layer_handler(event: IngestToRawZone, uow: UnitOfWorkProtocol):
         filename = f"{uow.start_time}_{api_config.request_type}_{cleaned_location}"
         init_write_parquet = partial(
             uow.repo.write_parquet,
-            path=f"{REPO_ROOT.joinpath(config.get('save_dir', ''), cleaned_location)}/{filename}.parquet",
+            path=f"{event.repo_root}/{config.get('save_dir', '')}/{cleaned_location}/{filename}.parquet",
         )
 
         pipeline = pipe(

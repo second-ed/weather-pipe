@@ -14,13 +14,14 @@ class Event:
 @attrs.define
 class IngestToRawZone(Event):
     config_path: str = attrs.field(default="")
+    repo_root: str = attrs.field(default="")
     api_key: str = attrs.field(default="", repr=False)
 
 
 def parse_event(msg: dict) -> Event:
     # go from most specific to least
     match msg:
-        case {"config_path": _, "api_key": _}:
+        case {"config_path": _, "api_key": _, "repo_root": _}:
             return IngestToRawZone.from_dict(msg)
 
         case {"priority_event": _}:

@@ -1,6 +1,7 @@
-from typing import Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 import attrs
+import structlog
 
 
 @runtime_checkable
@@ -13,11 +14,22 @@ class LoggerProtocol(Protocol):
 
 
 @attrs.define
+class StructLogger:
+    logger: structlog.BoundLogger = attrs.Factory(structlog.get_logger)
+
+    def debug(self, msg: str, **kwargs: Any) -> None:
+        self.logger.debug(msg, **kwargs)
+
+    def info(self, msg: str, **kwargs: Any) -> None:
+        self.logger.info(msg, **kwargs)
+
+    def error(self, msg: str, **kwargs: Any) -> None:
+        self.logger.error(msg, **kwargs)
+
+
+@attrs.define
 class FakeLogger(LoggerProtocol):
     log: list = attrs.field(default=attrs.Factory(list))
-
-    def notset(self, msg: str) -> None:
-        self.log.append(f"NOTSET: {msg}")
 
     def debug(self, msg: str) -> None:
         self.log.append(f"DEBUG: {msg}")
@@ -25,14 +37,14 @@ class FakeLogger(LoggerProtocol):
     def info(self, msg: str) -> None:
         self.log.append(f"INFO: {msg}")
 
+    def error(self, msg: str) -> None:
+        self.log.append(f"ERROR: {msg}")
+
     def warning(self, msg: str) -> None:
         self.log.append(f"WARNING: {msg}")
 
     def warn(self, msg: str) -> None:
         self.log.append(f"WARN: {msg}")
-
-    def error(self, msg: str) -> None:
-        self.log.append(f"ERROR: {msg}")
 
     def fatal(self, msg: str) -> None:
         self.log.append(f"FATAL: {msg}")

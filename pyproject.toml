@@ -34,3 +34,10 @@ dev = [
     "ruff>=0.9.6",
     "scalene>=1.5.51",
 ]
+
+[tool.coverage.run]
+omit = [
+    ".venv/*",
+    "./src/weather_pipe/pipe_000_raw.py",
+    "./src/weather_pipe/script_000_combine_parquets.py",
+]
