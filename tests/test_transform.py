@@ -2,9 +2,11 @@ from datetime import datetime
 
 import polars as pl
 import pytest
+from hypothesis import given
+from hypothesis.strategies import text
 from returns.result import Failure, Success
 
-from src.weather_pipe.transform import add_ingestion_columns
+from weather_pipe.transform import add_ingestion_columns, clean_str
 
 
 @pytest.mark.parametrize(
@@ -37,3 +39,11 @@ def test_add_ingestion_columns(df, batch_guid, date_time, err):
 
         case Failure(inner):
             assert inner == err
+
+
+@given(text())
+def test_clean_str(input_url):
+    result = clean_str(input_url)
+    assert "__" not in result
+    assert result == result.lower()
+    assert all(char.isalnum() for char in result if char != "_")
