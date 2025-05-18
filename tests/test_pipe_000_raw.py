@@ -61,3 +61,6 @@ def test_raw_pipe(args, expected_result):
 
     # the pipe should've logged the expected result
     assert any(expected_result in log for log in bus.uow.logger.log)
+
+    if "Success" in expected_result:
+        assert len(bus.uow.repo.db[FileType.PARQUET]) > 0
