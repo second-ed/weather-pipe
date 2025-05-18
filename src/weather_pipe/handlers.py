@@ -19,7 +19,7 @@ def raw_layer_handler(event: IngestToRawZone, uow: UnitOfWorkProtocol):
         uow.logger.info({"guid": uow.guid, "event": event})
         config_res = uow.repo.read(event.config_path, FileType.YAML)
         if isinstance(config_res, Failure):
-            uow.logger.error({"guid": uow.guid, "result": config_res})
+            uow.logger.error({"guid": uow.guid, "event": event, "result": config_res})
             return Failure({"err": config_res.failure()})
         config = config_res.unwrap()
 
@@ -50,7 +50,7 @@ def raw_layer_handler(event: IngestToRawZone, uow: UnitOfWorkProtocol):
             bind(init_write_parquet),
         )
         result = pipeline(api_config)
-        uow.logger.info({"guid": uow.guid, "result": result})
+        uow.logger.info({"guid": uow.guid, "event": event, "result": result})
 
     if is_successful(result):
         return PromoteToBronzeLayer()

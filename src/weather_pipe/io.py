@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import Any, Protocol, runtime_checkable
 
 import attrs
@@ -43,14 +44,17 @@ class IOWrapper:
 
 @attrs.define
 class FakeIOWrapper:
-    db: dict = attrs.field(default=attrs.Factory(dict))
+    db: defaultdict = attrs.field(default=None)
     external_src: dict = attrs.field(default=attrs.Factory(dict))
     log: list = attrs.field(default=attrs.Factory(list))
+
+    def __attrs_post_init__(self):
+        self.db = self.db or defaultdict(dict)
 
     def read(self, path: str, file_type: iof.FileType) -> Result[dict, Exception]:
         self.log.append({"func": "read", "path": path, "file_type": file_type})
         try:
-            return Success(self.db[path])
+            return Success(self.db[file_type][path])
         except KeyError as e:
             return Failure({"err": str(e), "path": path})
 
@@ -58,7 +62,7 @@ class FakeIOWrapper:
         self, data: dict | pl.DataFrame, path: str, file_type: iof.FileType
     ) -> Result[bool, Exception]:
         self.log.append({"func": "write", "path": path, "file_type": file_type})
-        self.db[path] = data
+        self.db[file_type][path] = data
         return Success(True)
 
     def extract_data(self, api_config: ApiConfig) -> Result[dict[str, Any], Exception]:
