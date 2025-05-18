@@ -18,6 +18,11 @@ class IngestToRawZone(Event):
     api_key: str = attrs.field(default="", repr=False)
 
 
+@attrs.define
+class PromoteToBronzeLayer(Event):
+    db_path: str = attrs.field(default="")
+
+
 def parse_event(msg: dict | Event) -> Event:
     # can put this between each stage
     # and return early if not need to parse

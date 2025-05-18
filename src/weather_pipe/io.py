@@ -1,20 +1,21 @@
-import os
 from typing import Any, Protocol, runtime_checkable
 
 import attrs
 import polars as pl
 import requests
-import yaml
 from returns.result import Failure, Result, Success
 
+import weather_pipe.io_funcs as iof
 from weather_pipe.data_structures import ApiConfig
 
 
 @runtime_checkable
 class IOWrapperProtocol(Protocol):
-    def read_yaml(self, path: str) -> Result[dict, Exception]: ...
+    def read(self, path: str, file_type: iof.FileType) -> Result[dict, Exception]: ...
 
-    def write_parquet(self, df: pl.DataFrame, path: str) -> Result[bool, Exception]: ...
+    def write(
+        self, data, path: str, file_type: iof.FileType
+    ) -> Result[bool, Exception]: ...
 
     def extract_data(
         self, api_config: ApiConfig
@@ -23,24 +24,13 @@ class IOWrapperProtocol(Protocol):
 
 @attrs.define
 class IOWrapper:
-    def read_yaml(self, path: str) -> Result[dict, Exception]:
-        try:
-            with open(path, "r") as f:
-                data = yaml.safe_load(f)
-            if data is None:
-                return Failure({"err": "empty yaml", "path": path})
+    def read(self, path: str, file_type: iof.FileType) -> Result[dict, Exception]:
+        return iof.IO_READERS[file_type](path)
 
-            return Success(data)
-        except Exception as e:
-            return Failure({"err": str(e), "path": path})
-
-    def write_parquet(self, df: pl.DataFrame, path: str) -> Result[bool, Exception]:
-        try:
-            os.makedirs(os.path.dirname(path), exist_ok=True)
-            df.write_parquet(path)
-            return Success(True)
-        except Exception as e:
-            return Failure({"err": str(e)})
+    def write(
+        self, data: dict | pl.DataFrame, path: str, file_type: iof.FileType
+    ) -> Result[bool, Exception]:
+        return iof.IO_WRITERS[file_type](data, path)
 
     def extract_data(self, api_config: ApiConfig) -> Result[dict[str, Any], Exception]:
         call = f"http://api.weatherapi.com/v1/{api_config.request_type}.json?key={api_config.api_key}&q={api_config.location}&aqi=no"
@@ -57,16 +47,18 @@ class FakeIOWrapper:
     external_src: dict = attrs.field(default=attrs.Factory(dict))
     log: list = attrs.field(default=attrs.Factory(list))
 
-    def read_yaml(self, path: str) -> Result[dict, Exception]:
-        self.log.append({"func": "read_yaml", "path": path})
+    def read(self, path: str, file_type: iof.FileType) -> Result[dict, Exception]:
+        self.log.append({"func": "read", "path": path, "file_type": file_type})
         try:
             return Success(self.db[path])
         except KeyError as e:
             return Failure({"err": str(e), "path": path})
 
-    def write_parquet(self, df: pl.DataFrame, path: str) -> Result[bool, Exception]:
-        self.log.append({"func": "write_parquet", "path": path})
-        self.db[path] = df
+    def write(
+        self, data: dict | pl.DataFrame, path: str, file_type: iof.FileType
+    ) -> Result[bool, Exception]:
+        self.log.append({"func": "write", "path": path, "file_type": file_type})
+        self.db[path] = data
         return Success(True)
 
     def extract_data(self, api_config: ApiConfig) -> Result[dict[str, Any], Exception]:

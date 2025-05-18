@@ -68,7 +68,7 @@ def test_api_match(real, fake):
             [
                 (name, inspect.signature(fn))
                 for name, fn in inspect.getmembers(obj, inspect.isroutine)
-                if not (name.startswith("__") and name.endswith("__"))
+                if not name.startswith("_")  # only care about the public api
             ]
         )
 
