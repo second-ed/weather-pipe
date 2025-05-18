@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Any, Protocol, runtime_checkable
+from typing import Any, Protocol, TypeVar, runtime_checkable
 
 import attrs
 import polars as pl
@@ -9,10 +9,12 @@ from returns.result import Failure, Result, Success
 import weather_pipe.io_funcs as iof
 from weather_pipe.data_structures import ApiConfig
 
+Data = TypeVar("Data")
+
 
 @runtime_checkable
 class IOWrapperProtocol(Protocol):
-    def read(self, path: str, file_type: iof.FileType) -> Result[dict, Exception]: ...
+    def read(self, path: str, file_type: iof.FileType) -> Result[Data, Exception]: ...
 
     def write(
         self, data, path: str, file_type: iof.FileType
@@ -25,7 +27,7 @@ class IOWrapperProtocol(Protocol):
 
 @attrs.define
 class IOWrapper:
-    def read(self, path: str, file_type: iof.FileType) -> Result[dict, Exception]:
+    def read(self, path: str, file_type: iof.FileType) -> Result[Data, Exception]:
         return iof.IO_READERS[file_type](path)
 
     def write(
@@ -51,7 +53,7 @@ class FakeIOWrapper:
     def __attrs_post_init__(self):
         self.db = self.db or defaultdict(dict)
 
-    def read(self, path: str, file_type: iof.FileType) -> Result[dict, Exception]:
+    def read(self, path: str, file_type: iof.FileType) -> Result[Data, Exception]:
         self.log.append({"func": "read", "path": path, "file_type": file_type})
         try:
             return Success(self.db[file_type][path])
