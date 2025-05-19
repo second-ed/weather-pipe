@@ -5,7 +5,7 @@ import structlog
 
 from weather_pipe import events
 from weather_pipe.handlers import EVENT_HANDLERS
-from weather_pipe.io import IOWrapper
+from weather_pipe.io import LocalIOWrapper
 from weather_pipe.logger import StructLogger
 from weather_pipe.message_bus import MessageBus
 from weather_pipe.uow import UnitOfWork
@@ -29,7 +29,8 @@ if __name__ == "__main__":
     parser.add_argument("--api-key", type=str, help="API key for authentication")
     args = vars(parser.parse_args())
     args["repo_root"] = str(REPO_ROOT)
-    uow = UnitOfWork(repo=IOWrapper(), logger=StructLogger())
+    logger = StructLogger()
+    uow = UnitOfWork(repo=LocalIOWrapper(), logger=logger)
     bus = MessageBus(event_handlers=EVENT_HANDLERS, uow=uow)
     bus.add_events([events.parse_event(args)])
     bus.handle_events()

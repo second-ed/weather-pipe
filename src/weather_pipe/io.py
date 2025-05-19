@@ -26,7 +26,7 @@ class IOWrapperProtocol(Protocol):
 
 
 @attrs.define
-class IOWrapper:
+class LocalIOWrapper:
     def read(self, path: str, file_type: iof.FileType) -> Result[Data, Exception]:
         return iof.IO_READERS[file_type](path)
 
@@ -45,7 +45,7 @@ class IOWrapper:
 
 
 @attrs.define
-class FakeIOWrapper:
+class FakeLocalIOWrapper:
     db: defaultdict = attrs.field(default=None)
     external_src: dict = attrs.field(default=attrs.Factory(dict))
     log: list = attrs.field(default=attrs.Factory(list))
