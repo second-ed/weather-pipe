@@ -4,7 +4,7 @@ import pytest
 
 from weather_pipe import events
 from weather_pipe.handlers import EVENT_HANDLERS
-from weather_pipe.io import FakeLocalIOWrapper
+from weather_pipe.io import FakeIOWrapper
 from weather_pipe.io_funcs import FileType
 from weather_pipe.logger import FakeLogger
 from weather_pipe.message_bus import MessageBus
@@ -50,7 +50,7 @@ def test_raw_pipe(args, expected_result):
     db = defaultdict(dict, db)
     event = events.parse_event(args)
     uow = UnitOfWork(
-        repo=FakeLocalIOWrapper(db=db, external_src=external_src), logger=FakeLogger()
+        repo=FakeIOWrapper(db=db, external_src=external_src), logger=FakeLogger()
     )
     bus = MessageBus(event_handlers=EVENT_HANDLERS, uow=uow)
     bus.add_events([event])

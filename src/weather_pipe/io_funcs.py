@@ -39,13 +39,31 @@ def write_parquet(data: pl.DataFrame, path: str) -> bool:
 
 
 @safe
-def read_sqlite(path: str):
-    pass
+def read_sqlite(
+    path: str,
+    connection: pl._typing.ConnectionOrCursor,
+    execute_options: dict | None = None,
+):
+    return pl.read_database(
+        query=path, connection=connection, execute_options=execute_options
+    )
 
 
 @safe
-def write_sqlite(data: pl.DataFrame, path: str):
-    pass
+def write_sqlite(
+    data: pl.DataFrame,
+    path: str,
+    connection: pl._typing.ConnectionOrCursor,
+    if_table_exists: str = "fail",
+    engine_options: dict | None = None,
+):
+    data.write_database(
+        table_name=path,
+        connection=connection,
+        if_table_exists=if_table_exists,
+        engine_options=engine_options,
+    )
+    return True
 
 
 IO_READERS = {

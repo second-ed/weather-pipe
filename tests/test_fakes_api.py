@@ -2,7 +2,7 @@ import inspect
 
 import pytest
 
-from weather_pipe.io import FakeLocalIOWrapper, LocalIOWrapper
+from weather_pipe.io import FakeIOWrapper, IOWrapper
 from weather_pipe.logger import FakeLogger, StructLogger
 
 
@@ -56,8 +56,8 @@ class FakeMismatchingSignature:
             id="ensure logger matching public methods pass",
         ),
         pytest.param(
-            LocalIOWrapper(),
-            FakeLocalIOWrapper(),
+            IOWrapper(),
+            FakeIOWrapper(),
             id="ensure IO wrappers matching public methods pass",
         ),
     ),

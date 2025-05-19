@@ -14,26 +14,35 @@ Data = TypeVar("Data")
 
 @runtime_checkable
 class IOWrapperProtocol(Protocol):
-    def read(self, path: str, file_type: iof.FileType) -> Result[Data, Exception]: ...
+    def read(
+        self, path: str, file_type: iof.FileType, **kwargs
+    ) -> Result[Data, Exception]: ...
 
     def write(
-        self, data, path: str, file_type: iof.FileType
+        self, data, path: str, file_type: iof.FileType, **kwargs
     ) -> Result[bool, Exception]: ...
 
     def extract_data(
         self, api_config: ApiConfig
     ) -> Result[dict[str, Any], Exception]: ...
 
+    def add_db_conn(self, key: str, conn: pl._typing.ConnectionOrCursor):
+        self.db_conns[key] = conn
+
 
 @attrs.define
-class LocalIOWrapper:
-    def read(self, path: str, file_type: iof.FileType) -> Result[Data, Exception]:
-        return iof.IO_READERS[file_type](path)
+class IOWrapper:
+    db_conns: dict = attrs.field(default=None)
+
+    def read(
+        self, path: str, file_type: iof.FileType, **kwargs
+    ) -> Result[Data, Exception]:
+        return iof.IO_READERS[file_type](path, **kwargs)
 
     def write(
-        self, data: dict | pl.DataFrame, path: str, file_type: iof.FileType
+        self, data: dict | pl.DataFrame, path: str, file_type: iof.FileType, **kwargs
     ) -> Result[bool, Exception]:
-        return iof.IO_WRITERS[file_type](data, path)
+        return iof.IO_WRITERS[file_type](data, path, **kwargs)
 
     def extract_data(self, api_config: ApiConfig) -> Result[dict[str, Any], Exception]:
         call = f"http://api.weatherapi.com/v1/{api_config.request_type}.json?key={api_config.api_key}&q={api_config.location}&aqi=no"
@@ -43,9 +52,13 @@ class LocalIOWrapper:
             return Success(response.json())
         return Failure(response)
 
+    def add_db_conn(self, key: str, conn: pl._typing.ConnectionOrCursor):
+        self.db_conns[key] = conn
+
 
 @attrs.define
-class FakeLocalIOWrapper:
+class FakeIOWrapper:
+    db_conns: dict = attrs.field(default=None)
     db: defaultdict = attrs.field(default=None)
     external_src: dict = attrs.field(default=attrs.Factory(dict))
     log: list = attrs.field(default=attrs.Factory(list))
@@ -53,19 +66,28 @@ class FakeLocalIOWrapper:
     def __attrs_post_init__(self):
         self.db = self.db or defaultdict(dict)
 
-    def read(self, path: str, file_type: iof.FileType) -> Result[Data, Exception]:
-        self.log.append({"func": "read", "path": path, "file_type": file_type})
+    def read(
+        self, path: str, file_type: iof.FileType, **kwargs
+    ) -> Result[Data, Exception]:
+        self.log.append(
+            {"func": "read", "path": path, "file_type": file_type, "kwargs": kwargs}
+        )
         try:
             return Success(self.db[file_type][path])
         except KeyError as e:
             return Failure({"err": str(e), "path": path})
 
     def write(
-        self, data: dict | pl.DataFrame, path: str, file_type: iof.FileType
+        self, data: dict | pl.DataFrame, path: str, file_type: iof.FileType, **kwargs
     ) -> Result[bool, Exception]:
-        self.log.append({"func": "write", "path": path, "file_type": file_type})
+        self.log.append(
+            {"func": "write", "path": path, "file_type": file_type, "kwargs": kwargs}
+        )
         self.db[file_type][path] = data
         return Success(True)
 
     def extract_data(self, api_config: ApiConfig) -> Result[dict[str, Any], Exception]:
         return Success(self.external_src[api_config.location])
+
+    def add_db_conn(self, key: str, conn: pl._typing.ConnectionOrCursor):
+        self.db_conns[key] = conn
