@@ -44,21 +44,19 @@ def read_sqlite(
     connection: pl._typing.ConnectionOrCursor,
     execute_options: dict | None = None,
 ):
-    return pl.read_database(
-        query=path, connection=connection, execute_options=execute_options
-    )
+    return pl.read_database(query=path, connection=connection, execute_options=execute_options)
 
 
 @safe
 def write_sqlite(
     data: pl.DataFrame,
-    path: str,
+    table_name: str,
     connection: pl._typing.ConnectionOrCursor,
     if_table_exists: str = "fail",
     engine_options: dict | None = None,
 ):
     data.write_database(
-        table_name=path,
+        table_name=table_name,
         connection=connection,
         if_table_exists=if_table_exists,
         engine_options=engine_options,

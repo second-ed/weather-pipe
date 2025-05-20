@@ -1,3 +1,4 @@
+import sqlite3
 from collections import defaultdict
 from typing import Any, Protocol, TypeVar, runtime_checkable
 
@@ -14,29 +15,28 @@ Data = TypeVar("Data")
 
 @runtime_checkable
 class IOWrapperProtocol(Protocol):
-    def read(
-        self, path: str, file_type: iof.FileType, **kwargs
-    ) -> Result[Data, Exception]: ...
+    def setup(self) -> bool: ...
+
+    def teardown(self) -> bool: ...
+
+    def read(self, path: str, file_type: iof.FileType, **kwargs) -> Result[Data, Exception]: ...
 
     def write(
         self, data, path: str, file_type: iof.FileType, **kwargs
     ) -> Result[bool, Exception]: ...
 
-    def extract_data(
-        self, api_config: ApiConfig
-    ) -> Result[dict[str, Any], Exception]: ...
-
-    def add_db_conn(self, key: str, conn: pl._typing.ConnectionOrCursor):
-        self.db_conns[key] = conn
-
 
 @attrs.define
-class IOWrapper:
-    db_conns: dict = attrs.field(default=None)
+class LocalIOWrapper:
+    db_conns: dict = attrs.field(default=attrs.Factory(dict))
 
-    def read(
-        self, path: str, file_type: iof.FileType, **kwargs
-    ) -> Result[Data, Exception]:
+    def setup(self) -> bool:
+        return True
+
+    def teardown(self) -> bool:
+        return True
+
+    def read(self, path: str, file_type: iof.FileType, **kwargs) -> Result[Data, Exception]:
         return iof.IO_READERS[file_type](path, **kwargs)
 
     def write(
@@ -52,13 +52,9 @@ class IOWrapper:
             return Success(response.json())
         return Failure(response)
 
-    def add_db_conn(self, key: str, conn: pl._typing.ConnectionOrCursor):
-        self.db_conns[key] = conn
-
 
 @attrs.define
-class FakeIOWrapper:
-    db_conns: dict = attrs.field(default=None)
+class FakeLocalIOWrapper:
     db: defaultdict = attrs.field(default=None)
     external_src: dict = attrs.field(default=attrs.Factory(dict))
     log: list = attrs.field(default=attrs.Factory(list))
@@ -66,12 +62,14 @@ class FakeIOWrapper:
     def __attrs_post_init__(self):
         self.db = self.db or defaultdict(dict)
 
-    def read(
-        self, path: str, file_type: iof.FileType, **kwargs
-    ) -> Result[Data, Exception]:
-        self.log.append(
-            {"func": "read", "path": path, "file_type": file_type, "kwargs": kwargs}
-        )
+    def setup(self) -> bool:
+        return True
+
+    def teardown(self) -> bool:
+        return True
+
+    def read(self, path: str, file_type: iof.FileType, **kwargs) -> Result[Data, Exception]:
+        self.log.append({"func": "read", "path": path, "file_type": file_type, "kwargs": kwargs})
         try:
             return Success(self.db[file_type][path])
         except KeyError as e:
@@ -80,14 +78,63 @@ class FakeIOWrapper:
     def write(
         self, data: dict | pl.DataFrame, path: str, file_type: iof.FileType, **kwargs
     ) -> Result[bool, Exception]:
-        self.log.append(
-            {"func": "write", "path": path, "file_type": file_type, "kwargs": kwargs}
-        )
+        self.log.append({"func": "write", "path": path, "file_type": file_type, "kwargs": kwargs})
         self.db[file_type][path] = data
         return Success(True)
 
     def extract_data(self, api_config: ApiConfig) -> Result[dict[str, Any], Exception]:
         return Success(self.external_src[api_config.location])
 
-    def add_db_conn(self, key: str, conn: pl._typing.ConnectionOrCursor):
-        self.db_conns[key] = conn
+
+@attrs.define
+class SQLiteIOWrapper:
+    db_path: str = attrs.field(default="")
+    db_conn: pl._typing.ConnectionOrCursor = attrs.field(default=None)
+
+    def setup(self) -> bool:
+        self.db_conn = sqlite3.connect(self.db_path)
+
+    def teardown(self) -> bool:
+        self.db_conn.close()
+
+    def read(self, query: str, **kwargs):
+        return iof.IO_READERS[iof.FileType.SQLITE](query, connection=self.db_conn, **kwargs)
+
+    def write(self, data: pl.DataFrame, table_name: str, **kwargs) -> Result[bool, Exception]:
+        return iof.IO_WRITERS[iof.FileType.SQLITE](
+            data=data, table_name=table_name, connection=self.db_conn, **kwargs
+        )
+
+
+@attrs.define
+class FakeSQLiteIOWrapper:
+    db_path: str = attrs.field(default="")
+    db_conn: pl._typing.ConnectionOrCursor = attrs.field(default=None)
+    db: defaultdict = attrs.field(default=None)
+    log: list = attrs.field(default=attrs.Factory(list))
+
+    def __attrs_post_init__(self):
+        self.db = self.db or defaultdict(dict)
+
+    def setup(self) -> bool:
+        self.db_conn = True
+
+    def teardown(self) -> bool:
+        self.db_conn = False
+
+    def read(self, query: str, **kwargs):
+        self.log.append({"func": "read", "query": query, "kwargs": kwargs})
+        try:
+            query_list = query.split()
+            table_idx = query_list.index("FROM") + 1
+            table_name = query_list[table_idx]
+            query_list[table_idx] = "self"
+            pl_query = " ".join(query_list)
+            return Success(self.db[table_name].sql(pl_query))
+        except KeyError as e:
+            return Failure({"err": str(e), "query": pl_query})
+
+    def write(self, data: pl.DataFrame, table_name: str, **kwargs) -> Result[bool, Exception]:
+        self.log.append({"func": "write", "table_name": table_name, "kwargs": kwargs})
+        self.db[table_name] = data
+        return Success(True)

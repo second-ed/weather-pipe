@@ -37,12 +37,8 @@ def delete_files(load_path: str) -> Result[bool, list]:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Combine multiple parquets into one.")
-    parser.add_argument(
-        "--load-path", type=str, help="Path to the individual parquet files"
-    )
-    parser.add_argument(
-        "--save-dir", type=str, help="The directory to save the combined file to"
-    )
+    parser.add_argument("--load-path", type=str, help="Path to the individual parquet files")
+    parser.add_argument("--save-dir", type=str, help="The directory to save the combined file to")
     args = parser.parse_args()
 
     print(combine_parquets(args.load_path, args.save_dir).bind(delete_files))

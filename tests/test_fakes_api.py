@@ -2,7 +2,7 @@ import inspect
 
 import pytest
 
-from weather_pipe.io import FakeIOWrapper, IOWrapper
+import weather_pipe.io as io_mod
 from weather_pipe.logger import FakeLogger, StructLogger
 
 
@@ -31,16 +31,12 @@ class FakeMismatchingSignature:
 @pytest.mark.parametrize(
     "real, fake",
     (
-        pytest.param(
-            SanityCheck(), FakeSanityCheck(), id="ensure matching public methods pass"
-        ),
+        pytest.param(SanityCheck(), FakeSanityCheck(), id="ensure matching public methods pass"),
         pytest.param(
             SanityCheck(),
             FakeMissingMethod(),
             id="ensure fails if fake missing method",
-            marks=pytest.mark.xfail(
-                reason="ensure fails if fake missing method", strict=True
-            ),
+            marks=pytest.mark.xfail(reason="ensure fails if fake missing method", strict=True),
         ),
         pytest.param(
             SanityCheck(),
@@ -56,9 +52,14 @@ class FakeMismatchingSignature:
             id="ensure logger matching public methods pass",
         ),
         pytest.param(
-            IOWrapper(),
-            FakeIOWrapper(),
+            io_mod.LocalIOWrapper(),
+            io_mod.FakeLocalIOWrapper(),
             id="ensure IO wrappers matching public methods pass",
+        ),
+        pytest.param(
+            io_mod.SQLiteIOWrapper(),
+            io_mod.FakeSQLiteIOWrapper(),
+            id="ensure SQL wrappers matching public methods pass",
         ),
     ),
 )

@@ -27,6 +27,7 @@ class UnitOfWork(UnitOfWorkProtocol):
         self.guid = str(self.guid_generator())
         self.start_time = datetime.now().strftime("%y%m%d_%H%M%S")
         self.logger.info({"guid": self.guid, "msg": "Initialising UOW"})
+        self.repo.setup()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -34,3 +35,5 @@ class UnitOfWork(UnitOfWorkProtocol):
             self.logger.error({"guid": self.guid, "msg": exc_val})
         else:
             self.logger.info({"guid": self.guid, "msg": "Completed UOW"})
+
+        self.repo.teardown()
