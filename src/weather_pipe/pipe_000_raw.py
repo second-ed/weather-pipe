@@ -26,9 +26,11 @@ if __name__ == "__main__":
     parser.add_argument("--config-path", type=str, help="Path to the configuration file")
     parser.add_argument("--api-key", type=str, help="API key for authentication")
     args = vars(parser.parse_args())
+
     args["repo_root"] = str(REPO_ROOT)
+
     logger = StructLogger()
-    uow = {
+    uows = {
         events.IngestToRawZone: UnitOfWork(repo=io_mod.LocalIOWrapper(), logger=logger),
         events.PromoteToBronzeLayer: UnitOfWork(
             repo=io_mod.SQLiteIOWrapper(
@@ -37,6 +39,7 @@ if __name__ == "__main__":
             logger=logger,
         ),
     }
-    bus = MessageBus(event_handlers=EVENT_HANDLERS, uows=uow)
+
+    bus = MessageBus(event_handlers=EVENT_HANDLERS, uows=uows)
     bus.add_events([events.parse_event(args)])
     bus.handle_events()

@@ -50,15 +50,17 @@ def test_raw_pipe(args, expected_result):
     db = defaultdict(dict, db)
     event = events.parse_event(args)
     logger = FakeLogger()
+
     uows = {
         events.IngestToRawZone: UnitOfWork(
             repo=io_mod.FakeLocalIOWrapper(db=db, external_src=external_src), logger=logger
         ),
         events.PromoteToBronzeLayer: UnitOfWork(
-            repo=io_mod.FakeSQLiteIOWrapper(db_path="fake/path/to/db"),
+            repo=io_mod.FakeSQLiteIOWrapper(db_path="fake/path/bronze.db"),
             logger=logger,
         ),
     }
+
     bus = MessageBus(event_handlers=EVENT_HANDLERS, uows=uows)
     bus.add_events([event])
     bus.handle_events()

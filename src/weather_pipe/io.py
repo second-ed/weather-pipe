@@ -93,9 +93,11 @@ class SQLiteIOWrapper:
 
     def setup(self) -> bool:
         self.db_conn = sqlite3.connect(self.db_path)
+        return True
 
     def teardown(self) -> bool:
         self.db_conn.close()
+        return True
 
     def read(self, query: str, **kwargs):
         return iof.IO_READERS[iof.FileType.SQLITE](query, connection=self.db_conn, **kwargs)
@@ -118,9 +120,11 @@ class FakeSQLiteIOWrapper:
 
     def setup(self) -> bool:
         self.db_conn = True
+        return True
 
     def teardown(self) -> bool:
         self.db_conn = False
+        return True
 
     def read(self, query: str, **kwargs):
         self.log.append({"func": "read", "query": query, "kwargs": kwargs})
