@@ -13,9 +13,7 @@ from weather_pipe.transform import add_ingestion_columns, clean_str
     "df, batch_guid, date_time, err",
     (
         pytest.param(
-            pl.DataFrame(
-                {"col_1": [1, 2, 3, 4, 5, 6], "col_2": ["A", "B", "C", "D", "E", "F"]}
-            ),
+            pl.DataFrame({"col_1": [1, 2, 3, 4, 5, 6], "col_2": ["A", "B", "C", "D", "E", "F"]}),
             "123-abc",
             datetime(2000, 1, 1),
             None,

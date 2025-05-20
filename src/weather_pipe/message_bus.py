@@ -2,29 +2,27 @@ from collections import deque
 from collections.abc import Sequence
 
 import attrs
-from attrs.validators import instance_of
 
 from weather_pipe.events import Event, parse_event
 from weather_pipe.handlers import EventHandlers
-from weather_pipe.uow import UnitOfWorkProtocol
 
 
 @attrs.define
 class MessageBus:
     event_handlers: EventHandlers = attrs.field()
-    uow: UnitOfWorkProtocol = attrs.field(validator=instance_of(UnitOfWorkProtocol))
+    uows: dict = attrs.field()
     queue: deque = attrs.field(default=attrs.Factory(deque))
 
     def add_events(self, events: Sequence[Event]):
-        if not isinstance(events, Sequence) or not all(
-            isinstance(evt, Event) for evt in events
-        ):
+        if not isinstance(events, Sequence) or not all(isinstance(evt, Event) for evt in events):
             raise ValueError(f"{events} must be a Sequence of Event types")
         self.queue.extend(events)
 
     def handle_event(self):
         event = self.queue.popleft()
-        result = self.event_handlers[type(event)](event, self.uow)
+        handler = self.event_handlers[type(event)]
+        uow = self.uows[type(event)]
+        result = handler(event, uow)
 
         if isinstance(result, dict):
             result = parse_event(result)

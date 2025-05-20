@@ -9,6 +9,7 @@ from returns.result import safe
 class FileType(Enum):
     PARQUET = auto()
     YAML = auto()
+    SQLITE = auto()
 
 
 @safe
@@ -37,9 +38,40 @@ def write_parquet(data: pl.DataFrame, path: str) -> bool:
     return True
 
 
+@safe
+def read_sqlite(
+    path: str,
+    connection: pl._typing.ConnectionOrCursor,
+    execute_options: dict | None = None,
+):
+    return pl.read_database(query=path, connection=connection, execute_options=execute_options)
+
+
+@safe
+def write_sqlite(
+    data: pl.DataFrame,
+    table_name: str,
+    connection: pl._typing.ConnectionOrCursor,
+    if_table_exists: str = "fail",
+    engine_options: dict | None = None,
+):
+    data.write_database(
+        table_name=table_name,
+        connection=connection,
+        if_table_exists=if_table_exists,
+        engine_options=engine_options,
+    )
+    return True
+
+
 IO_READERS = {
     FileType.PARQUET: read_parquet,
     FileType.YAML: read_yaml,
+    FileType.SQLITE: read_sqlite,
 }
 
-IO_WRITERS = {FileType.PARQUET: write_parquet, FileType.YAML: write_yaml}
+IO_WRITERS = {
+    FileType.PARQUET: write_parquet,
+    FileType.YAML: write_yaml,
+    FileType.SQLITE: write_sqlite,
+}
