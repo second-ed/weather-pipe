@@ -28,8 +28,6 @@ class IOWrapperProtocol(Protocol):
 
 @attrs.define
 class LocalIOWrapper:
-    db_conns: dict = attrs.field(default=attrs.Factory(dict))
-
     def setup(self) -> bool:
         return True
 
