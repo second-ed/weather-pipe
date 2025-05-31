@@ -41,3 +41,10 @@ omit = [
     "./src/weather_pipe/pipe_000_raw.py",
     "./src/weather_pipe/script_000_combine_parquets.py",
 ]
+
+[tool.vulture]
+min_confidence = 75
+make_whitelist = true
+paths = ["src/"]
+sort_by_size = false
+verbose = false
