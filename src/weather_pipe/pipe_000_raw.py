@@ -3,12 +3,13 @@ from pathlib import Path
 
 import structlog
 
-import weather_pipe.io as io_mod
-from weather_pipe import events
-from weather_pipe.handlers import EVENT_HANDLERS
-from weather_pipe.logger import StructLogger
-from weather_pipe.message_bus import MessageBus
-from weather_pipe.uow import UnitOfWork
+from weather_pipe.adapters import repo
+from weather_pipe.adapters.fs_wrappers.local_fs_wrapper import LocalFileSystem
+from weather_pipe.adapters.io_wrappers.pl_io import PolarsIO
+from weather_pipe.adapters.logger import StructLogger
+from weather_pipe.service_layer.message_bus import MessageBus
+from weather_pipe.service_layer.uow import UnitOfWork
+from weather_pipe.usecases import events, handlers
 
 REPO_ROOT = Path(__file__).parents[2]
 
@@ -30,16 +31,19 @@ if __name__ == "__main__":
     args["repo_root"] = str(REPO_ROOT)
 
     logger = StructLogger()
+    raw_repo = repo.Repo(io=PolarsIO(), fs=LocalFileSystem())
+    bronze_repo = repo.Repo(
+        io=PolarsIO(db_name=REPO_ROOT.joinpath("data", "bronze", "database.db")),
+        fs=LocalFileSystem(),
+    )
     uows = {
-        events.IngestToRawZone: UnitOfWork(repo=io_mod.LocalIOWrapper(), logger=logger),
+        events.IngestToRawZone: UnitOfWork(repo=raw_repo, logger=logger),
         events.PromoteToBronzeLayer: UnitOfWork(
-            repo=io_mod.SQLiteIOWrapper(
-                db_path=REPO_ROOT.joinpath("data", "bronze", "database.db")
-            ),
+            repo=bronze_repo,
             logger=logger,
         ),
     }
 
-    bus = MessageBus(event_handlers=EVENT_HANDLERS, uows=uows)
+    bus = MessageBus(event_handlers=handlers.EVENT_HANDLERS, uows=uows)
     bus.add_events([events.parse_event(args)])
     bus.handle_events()

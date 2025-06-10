@@ -1,9 +1,12 @@
 import inspect
+from collections.abc import Callable
 
 import pytest
 
-import weather_pipe.io as io_mod
-from weather_pipe.logger import FakeLogger, StructLogger
+import weather_pipe.adapters.io_wrappers._io_protocol as io_protocol
+from weather_pipe.adapters.fs_wrappers import _fs_protocol as fs_protocol
+from weather_pipe.adapters.fs_wrappers import local_fs_wrapper
+from weather_pipe.adapters.io_wrappers import pl_io
 
 
 class SanityCheck:
@@ -15,7 +18,7 @@ class FakeSanityCheck:
     def method_a(self, a: int, b: float) -> float:
         return a * b
 
-    def some_test_helper_method(self, c: bool) -> bool:
+    def some_test_helper_method(self, *, c: bool) -> bool:
         return c
 
 
@@ -24,54 +27,55 @@ class FakeMissingMethod:
 
 
 class FakeMismatchingSignature:
-    def method_a(self, a: int):
+    def method_a(self, a: int) -> int:
         return a
 
 
 @pytest.mark.parametrize(
-    "real, fake",
-    (
-        pytest.param(SanityCheck(), FakeSanityCheck(), id="ensure matching public methods pass"),
+    ("real", "fake"),
+    [
+        pytest.param(
+            SanityCheck(),
+            FakeSanityCheck(),
+            id="ensure matching public methods pass",
+        ),
         pytest.param(
             SanityCheck(),
             FakeMissingMethod(),
             id="ensure fails if fake missing method",
-            marks=pytest.mark.xfail(reason="ensure fails if fake missing method", strict=True),
+            marks=pytest.mark.xfail(
+                reason="ensure fails if fake missing method",
+                strict=True,
+            ),
         ),
         pytest.param(
             SanityCheck(),
             FakeMismatchingSignature(),
             id="ensure fails if fake not matching signature",
             marks=pytest.mark.xfail(
-                reason="ensure fails if fake not matching signature", strict=True
+                reason="ensure fails if fake not matching signature",
+                strict=True,
             ),
         ),
         pytest.param(
-            StructLogger(),
-            FakeLogger(),
-            id="ensure logger matching public methods pass",
+            pl_io.PolarsIO(),
+            io_protocol.FakeIOWrapper(),
+            id="ensure polars wrapper matches fake",
         ),
         pytest.param(
-            io_mod.LocalIOWrapper(),
-            io_mod.FakeLocalIOWrapper(),
-            id="ensure IO wrappers matching public methods pass",
+            local_fs_wrapper.LocalFileSystem(),
+            fs_protocol.FakeFileSystem(),
+            id="ensure local file system wrapper matches fake",
         ),
-        pytest.param(
-            io_mod.SQLiteIOWrapper(),
-            io_mod.FakeSQLiteIOWrapper(),
-            id="ensure SQL wrappers matching public methods pass",
-        ),
-    ),
+    ],
 )
-def test_api_match(real, fake):
-    def get_methods(obj):
-        return dict(
-            [
-                (name, inspect.signature(fn))
-                for name, fn in inspect.getmembers(obj, inspect.isroutine)
-                if not name.startswith("_")  # only care about the public api
-            ]
-        )
+def test_api_match(real: object, fake: object) -> None:
+    def get_methods(obj: Callable) -> dict[str, inspect.Signature]:
+        return {
+            name: inspect.signature(fn)
+            for name, fn in inspect.getmembers(obj, inspect.isroutine)
+            if not (name.startswith("__") and name.endswith("__"))
+        }
 
     real_methods = get_methods(real)
     fake_methods = get_methods(fake)
@@ -80,4 +84,9 @@ def test_api_match(real, fake):
     assert set(real_methods) - set(fake_methods) == set()
 
     # all methods in the real have the same signature as those in the fake
-    assert set(real_methods.values()) - set(fake_methods.values()) == set()
+    mismatches = [
+        {"method": key, "real": method, "fake": fake_methods[key]}
+        for key, method in real_methods.items()
+        if fake_methods[key] != method
+    ]
+    assert mismatches == []

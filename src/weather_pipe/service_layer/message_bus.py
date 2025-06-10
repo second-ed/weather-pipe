@@ -2,30 +2,29 @@ from collections import deque
 from collections.abc import Sequence
 
 import attrs
+from attrs.validators import instance_of
 
-from weather_pipe.events import Event, parse_event
-from weather_pipe.handlers import EventHandlers
+from weather_pipe.service_layer.uow import UnitOfWorkProtocol
+from weather_pipe.usecases.events import Event
+from weather_pipe.usecases.handlers import EventHandlers
 
 
 @attrs.define
 class MessageBus:
     event_handlers: EventHandlers = attrs.field()
-    uows: dict = attrs.field()
+    uows: dict[Event, UnitOfWorkProtocol] = attrs.field(validator=instance_of(dict))
     queue: deque = attrs.field(default=attrs.Factory(deque))
 
-    def add_events(self, events: Sequence[Event]):
+    def add_events(self, events: Sequence[Event]) -> None:
         if not isinstance(events, Sequence) or not all(isinstance(evt, Event) for evt in events):
-            raise ValueError(f"{events} must be a Sequence of Event types")
+            msg = f"{events} must be a Sequence of Event types"
+            raise ValueError(msg)
         self.queue.extend(events)
 
-    def handle_event(self):
+    def handle_event(self) -> None:
         event = self.queue.popleft()
-        handler = self.event_handlers[type(event)]
         uow = self.uows[type(event)]
-        result = handler(event, uow)
-
-        if isinstance(result, dict):
-            result = parse_event(result)
+        result = self.event_handlers[type(event)](event, uow)
 
         if isinstance(result, Event):
             if result.priority_event:
@@ -48,6 +47,6 @@ class MessageBus:
             if back:
                 self.queue.extend(back)
 
-    def handle_events(self):
+    def handle_events(self) -> None:
         while self.queue:
             self.handle_event()
