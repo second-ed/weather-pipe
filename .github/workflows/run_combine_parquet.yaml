@@ -30,7 +30,7 @@ jobs:
         run: |
           git status
           git pull origin main
-          uv run ./src/weather_pipe/script_000_combine_parquets.py --load-path ./data/raw/liverpool/*_forecast_liverpool.parquet --save-dir ./data/combined/liverpool
+          uv run "./src/weather_pipe/script_000_combine_parquets.py" --load-path "./data/raw/liverpool/*_forecast_liverpool.parquet" --save-dir "./data/combined/liverpool"
 
       - name: Checkout branch
         run: |
