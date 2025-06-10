@@ -38,3 +38,5 @@ if __name__ == "__main__":
     parser.add_argument("--load-path", type=str, help="Path to the individual parquet files")
     parser.add_argument("--save-dir", type=str, help="The directory to save the combined file to")
     args = parser.parse_args()
+    print(args)  # noqa: T201
+    print(combine_parquets(args.load_path, args.save_dir).bind(delete_files))  # noqa: T201
