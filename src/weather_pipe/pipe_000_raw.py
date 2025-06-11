@@ -11,7 +11,7 @@ from weather_pipe.service_layer.message_bus import MessageBus
 from weather_pipe.service_layer.uow import UnitOfWork
 from weather_pipe.usecases import events, handlers
 
-REPO_ROOT = Path(__file__).parents[3]
+REPO_ROOT = Path(__file__).parents[2]
 
 if __name__ == "__main__":
     structlog.configure(
