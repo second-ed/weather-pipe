@@ -1,3 +1,4 @@
+import os
 import sqlite3
 from typing import Any
 
@@ -46,6 +47,8 @@ class PolarsIO:
 
     @safe
     def write(self, data: Data, path: str, file_type: FileType, **kwargs: dict) -> bool:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+
         match file_type:
             case FileType.CSV:
                 data.write_csv(path, **kwargs)
