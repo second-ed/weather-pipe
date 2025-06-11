@@ -38,12 +38,12 @@ def raw_layer_handler(event: IngestToRawZone, uow: UnitOfWorkProtocol) -> None:
             batch_guid=uow.guid,
             date_time=uow.start_time,
         )
-
         cleaned_location = clean_str(api_config.location)
+        save_dir = f"{event.repo_root}/{config.get('save_dir', '')}/{cleaned_location}"
         filename = f"{uow.start_time}_{api_config.request_type}_{cleaned_location}"
         init_write_parquet = partial(
             uow.repo.io.write,
-            path=f"{event.repo_root}/{config.get('save_dir', '')}/{cleaned_location}/{filename}.parquet",
+            path=f"{save_dir}/{filename}.parquet",
             file_type=FileType.PARQUET,
         )
 
