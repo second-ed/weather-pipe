@@ -1,6 +1,4 @@
-from collections.abc import Sequence
 from functools import partial
-from typing import Callable
 
 from returns.pipeline import is_successful, pipe
 from returns.pointfree import bind
@@ -10,9 +8,7 @@ from weather_pipe.adapters.io_wrappers._io_protocol import FileType
 from weather_pipe.domain.data_structures import ApiConfig
 from weather_pipe.domain.transform import add_ingestion_columns, clean_str, convert_json_to_df
 from weather_pipe.service_layer.uow import UnitOfWorkProtocol
-from weather_pipe.usecases.events import Event, IngestToRawZone, PromoteToBronzeLayer
-
-EventHandlers = dict[type, Callable[[Event], Event | Sequence[Event] | None]]
+from weather_pipe.usecases.events import IngestToRawZone, PromoteToBronzeLayer
 
 
 def raw_layer_handler(event: IngestToRawZone, uow: UnitOfWorkProtocol) -> None:
@@ -63,9 +59,3 @@ def raw_layer_handler(event: IngestToRawZone, uow: UnitOfWorkProtocol) -> None:
 
 def bronze_layer_handler(event: PromoteToBronzeLayer, uow: UnitOfWorkProtocol) -> None:
     pass
-
-
-EVENT_HANDLERS = {
-    IngestToRawZone: raw_layer_handler,
-    PromoteToBronzeLayer: bronze_layer_handler,
-}

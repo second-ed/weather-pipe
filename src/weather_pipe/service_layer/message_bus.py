@@ -5,8 +5,8 @@ import attrs
 from attrs.validators import instance_of
 
 from weather_pipe.service_layer.uow import UnitOfWorkProtocol
+from weather_pipe.usecases import EventHandlers
 from weather_pipe.usecases.events import Event
-from weather_pipe.usecases.handlers import EventHandlers
 
 
 @attrs.define

@@ -9,8 +9,7 @@ from weather_pipe.adapters.io_wrappers._io_protocol import FakeIOWrapper, FileTy
 from weather_pipe.adapters.logger import FakeLogger
 from weather_pipe.service_layer.message_bus import MessageBus
 from weather_pipe.service_layer.uow import UnitOfWork
-from weather_pipe.usecases import events
-from weather_pipe.usecases.handlers import EVENT_HANDLERS
+from weather_pipe.usecases import EVENT_HANDLERS, events
 
 from .conftest import JSON_RESPONSE
 
