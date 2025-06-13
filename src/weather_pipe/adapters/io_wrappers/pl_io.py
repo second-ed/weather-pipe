@@ -19,6 +19,7 @@ class PolarsIO:
 
     def setup(self) -> bool:
         if self.db_name:
+            os.makedirs(os.path.dirname(self.db_name), exist_ok=True)
             self.conn = sqlite3.connect(self.db_name)
         return True
 
