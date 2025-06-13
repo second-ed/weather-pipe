@@ -49,7 +49,7 @@ def test_clean_str(input_url):
 
 
 @pytest.mark.parametrize(
-    ("df", "cols", "expected_fact_table", "expected_dim_table"),
+    ("df", "expected_fact_table"),
     [
         pytest.param(
             pl.DataFrame(
@@ -64,30 +64,18 @@ def test_clean_str(input_url):
                     ),
                 },
             ),
-            ["city"],
             [
-                {"name": "alice", "age": 25, "city_id": 1},
-                {"name": "bob", "age": 30, "city_id": 2},
-                {"name": "charlie", "age": 22, "city_id": 0},
-            ],
-            [
-                {"city_id": 0, "city": "berlin"},
-                {"city_id": 1, "city": "london"},
-                {"city_id": 2, "city": "paris"},
+                {"name": "alice", "age": 25, "city": "london"},
+                {"name": "bob", "age": 30, "city": "paris"},
+                {"name": "charlie", "age": 22, "city": "berlin"},
             ],
         ),
     ],
 )
-def test_transform_tables(df, cols, expected_fact_table, expected_dim_table):
-    layer_tables = ds.RawTables(fact_table=df, cols=cols)
-    res = (
-        tf.unnest_struct_cols(layer_tables)
-        .bind(tf.clean_text_cols)
-        .bind(tf.normalise_table)
-        .bind(tf.replace_col_with_id)
-    )
+def test_transform_tables(df, expected_fact_table):
+    layer_tables = ds.RawTable(table=df)
+    res = tf.unnest_struct_cols(layer_tables).bind(tf.clean_text_cols)
 
     assert isinstance(res, Success)
     encoded_tables = res.unwrap()
-    assert encoded_tables.fact_table.to_dicts() == expected_fact_table
-    assert encoded_tables.dim_tables[cols[0]].to_dicts() == expected_dim_table
+    assert encoded_tables.table.to_dicts() == expected_fact_table

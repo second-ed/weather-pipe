@@ -16,27 +16,25 @@ class ApiConfig:
 
 
 @attrs.define
-class RawTables:
-    fact_table: pl.DataFrame = attrs.field(repr=False)
-    dim_tables: dict | None = attrs.field(default=None, repr=False)
-    cols: list | None = attrs.field(default=None)
+class RawTable:
+    table: pl.DataFrame = attrs.field(repr=False)
 
 
 @attrs.define
-class UnnestedTables(RawTables):
+class UnnestedTable(RawTable):
     pass
 
 
 @attrs.define
-class CleanedTables(RawTables):
+class CleanedTable(RawTable):
     pass
 
 
 @attrs.define
-class NormalisedTables(RawTables):
+class NormalisedTable(RawTable):
     pass
 
 
 @attrs.define
-class EncodedTables(RawTables):
+class EncodedTable(RawTable):
     pass

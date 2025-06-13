@@ -7,11 +7,11 @@ import polars as pl
 from returns.result import safe
 
 from weather_pipe.domain.data_structures import (
-    CleanedTables,
-    EncodedTables,
-    NormalisedTables,
-    RawTables,
-    UnnestedTables,
+    CleanedTable,
+    EncodedTable,
+    NormalisedTable,
+    RawTable,
+    UnnestedTable,
 )
 
 
@@ -48,51 +48,51 @@ def clean_str(inp_str: str) -> str:
 
 
 @safe
-def unnest_struct_cols(raw_tables: RawTables) -> UnnestedTables:
-    unnested_tables = UnnestedTables(*attrs.astuple(raw_tables))
-    unnested_tables.fact_table = unnested_tables.fact_table.unnest(
+def unnest_struct_cols(raw_tables: RawTable) -> UnnestedTable:
+    unnested_table = UnnestedTable(*attrs.astuple(raw_tables))
+    unnested_table.table = unnested_table.table.unnest(
         [
             col
-            for col in unnested_tables.fact_table.columns
-            if unnested_tables.fact_table.schema[col] == pl.Struct
+            for col in unnested_table.table.columns
+            if unnested_table.table.schema[col] == pl.Struct
         ],
     )
-    return unnested_tables
+    return unnested_table
 
 
 @safe
-def clean_text_cols(unnested_tables: UnnestedTables) -> CleanedTables:
-    cleaned_tables = CleanedTables(*attrs.astuple(unnested_tables))
-    cleaned_tables.fact_table = cleaned_tables.fact_table.with_columns(
+def clean_text_cols(unnested_table: UnnestedTable) -> CleanedTable:
+    cleaned_table = CleanedTable(*attrs.astuple(unnested_table))
+    cleaned_table.table = cleaned_table.table.with_columns(
         [
             pl.col(col).str.strip_chars().str.to_lowercase()
-            for col in cleaned_tables.fact_table.columns
-            if cleaned_tables.fact_table.schema[col] == pl.Utf8
+            for col in cleaned_table.table.columns
+            if cleaned_table.table.schema[col] == pl.Utf8
         ],
     )
-    return cleaned_tables
+    return cleaned_table
 
 
 @safe
-def normalise_table(cleaned_tables: CleanedTables) -> NormalisedTables:
-    norm_tables = NormalisedTables(*attrs.astuple(cleaned_tables))
-    norm_tables.dim_tables = {}
-    for col in norm_tables.cols:
-        norm_table = norm_tables.fact_table[col].unique().to_frame().sort(by=col)
+def normalise_table(cleaned_table: CleanedTable) -> NormalisedTable:
+    norm_table = NormalisedTable(*attrs.astuple(cleaned_table))
+    norm_table.dim_tables = {}
+    for col in norm_table.cols:
+        norm_table = norm_table.table[col].unique().to_frame().sort(by=col)
         norm_table = norm_table.with_columns(
             pl.arange(0, norm_table.height).alias(f"{col}_id"),
         )
-        norm_tables.dim_tables[col] = norm_table.select(f"{col}_id", col)
-    return norm_tables
+        norm_table.dim_tables[col] = norm_table.select(f"{col}_id", col)
+    return norm_table
 
 
 @safe
-def replace_col_with_id(norm_tables: NormalisedTables) -> EncodedTables:
-    encoded_tables = EncodedTables(*attrs.astuple(norm_tables))
-    for col, dim in encoded_tables.dim_tables.items():
-        encoded_tables.fact_table = encoded_tables.fact_table.join(
+def replace_col_with_id(norm_table: NormalisedTable) -> EncodedTable:
+    encoded_table = EncodedTable(*attrs.astuple(norm_table))
+    for col, dim in encoded_table.dim_tables.items():
+        encoded_table.table = encoded_table.table.join(
             dim,
             on=col,
             how="left",
         ).drop(col)
-    return encoded_tables
+    return encoded_table
