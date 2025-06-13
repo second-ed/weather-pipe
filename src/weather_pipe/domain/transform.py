@@ -8,8 +8,6 @@ from returns.result import safe
 
 from weather_pipe.domain.data_structures import (
     CleanedTable,
-    EncodedTable,
-    NormalisedTable,
     RawTable,
     UnnestedTable,
 )
@@ -71,28 +69,3 @@ def clean_text_cols(unnested_table: UnnestedTable) -> CleanedTable:
         ],
     )
     return cleaned_table
-
-
-@safe
-def normalise_table(cleaned_table: CleanedTable) -> NormalisedTable:
-    norm_table = NormalisedTable(*attrs.astuple(cleaned_table))
-    norm_table.dim_tables = {}
-    for col in norm_table.cols:
-        norm_table = norm_table.table[col].unique().to_frame().sort(by=col)
-        norm_table = norm_table.with_columns(
-            pl.arange(0, norm_table.height).alias(f"{col}_id"),
-        )
-        norm_table.dim_tables[col] = norm_table.select(f"{col}_id", col)
-    return norm_table
-
-
-@safe
-def replace_col_with_id(norm_table: NormalisedTable) -> EncodedTable:
-    encoded_table = EncodedTable(*attrs.astuple(norm_table))
-    for col, dim in encoded_table.dim_tables.items():
-        encoded_table.table = encoded_table.table.join(
-            dim,
-            on=col,
-            how="left",
-        ).drop(col)
-    return encoded_table
