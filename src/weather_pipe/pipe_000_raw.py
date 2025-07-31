@@ -9,7 +9,7 @@ from weather_pipe.adapters.io_wrappers.pl_io import PolarsIO
 from weather_pipe.adapters.logger import StructLogger
 from weather_pipe.service_layer.message_bus import MessageBus
 from weather_pipe.service_layer.uow import UnitOfWork
-from weather_pipe.usecases import EVENT_HANDLERS, events
+from weather_pipe.usecases import EVENT_HANDLERS, _event, bronze_layer, raw_layer
 
 REPO_ROOT = Path(__file__).parents[2]
 
@@ -37,13 +37,13 @@ if __name__ == "__main__":
         fs=LocalFileSystem(),
     )
     uows = {
-        events.IngestToRawZone: UnitOfWork(repo=raw_repo, logger=logger),
-        events.PromoteToBronzeLayer: UnitOfWork(
+        raw_layer.IngestToRawZone: UnitOfWork(repo=raw_repo, logger=logger),
+        bronze_layer.PromoteToBronzeLayer: UnitOfWork(
             repo=bronze_repo,
             logger=logger,
         ),
     }
 
     bus = MessageBus(event_handlers=EVENT_HANDLERS, uows=uows)
-    bus.add_events([events.parse_event(args)])
+    bus.add_events([_event.parse_event(args)])
     bus.handle_events()
