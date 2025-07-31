@@ -44,6 +44,8 @@ if __name__ == "__main__":
         ),
     }
 
-    bus = MessageBus(event_handlers=EVENT_HANDLERS, uows=uows)
-    bus.add_events([_event.parse_event(args)])
-    bus.handle_events()
+    _bus = (
+        MessageBus(event_handlers=EVENT_HANDLERS, uows=uows)
+        .add_events([_event.parse_event(args)])
+        .handle_events()
+    )

@@ -86,9 +86,7 @@ def test_raw_pipe(args, expected_result):
         ),
     }
 
-    bus = MessageBus(event_handlers=EVENT_HANDLERS, uows=uows)
-    bus.add_events([event])
-    bus.handle_events()
+    bus = MessageBus(event_handlers=EVENT_HANDLERS, uows=uows).add_events([event]).handle_events()
 
     # the pipe should've logged the expected result
     assert bus.uows[raw_layer.IngestToRawZone].logger.log == expected_result
