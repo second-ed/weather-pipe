@@ -21,6 +21,7 @@ def bronze_layer_handler(event: PromoteToBronzeLayer, uow: UnitOfWorkProtocol) -
     for path in paths:
         big_table = pl.read_parquet(path)
         res = tf.unnest_struct_cols(ds.RawTable(table=big_table)).bind(tf.clean_text_cols)
+
         if not is_successful(res):
             failed_files[path] = res
             continue
