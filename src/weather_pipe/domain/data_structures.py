@@ -28,3 +28,8 @@ class UnnestedTable(RawTable):
 @attrs.define
 class CleanedTable(RawTable):
     pass
+
+
+@attrs.define
+class EncodedTable(RawTable):
+    pass

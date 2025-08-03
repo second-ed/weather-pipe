@@ -28,7 +28,7 @@ def bronze_layer_handler(event: PromoteToBronzeLayer, uow: UnitOfWorkProtocol) -
 
             if not is_successful(raw_df):
                 failed_reads.append(raw_df)
-                uow.logger.info(
+                uow.logger.error(
                     {"guid": uow.guid, "msg": f"failed to read fact table for path: `{path}`"},
                 )
                 continue
@@ -38,7 +38,7 @@ def bronze_layer_handler(event: PromoteToBronzeLayer, uow: UnitOfWorkProtocol) -
 
             if not is_successful(cleaned_fact):
                 failed_reads.append(cleaned_fact)
-                uow.logger.info(
+                uow.logger.error(
                     {
                         "guid": uow.guid,
                         "msg": f"failed to unnest and clean fact table for path: `{path}`",
@@ -48,8 +48,51 @@ def bronze_layer_handler(event: PromoteToBronzeLayer, uow: UnitOfWorkProtocol) -
 
             cleaned_fact = cleaned_fact.unwrap()
 
+            dim_tables = {}
+
             for table_name in event.table_names:
                 update_dim_table(uow, cleaned_fact, table_name, failed_reads, failed_writes)
+                dim_data = uow.repo.io.read(f"SELECT * FROM {table_name}", FileType.SQLITE3)  # noqa: S608
+
+                if not is_successful(dim_data):
+                    uow.logger.error(
+                        {"guid": uow.guid, "msg": f"failed to read table: `{table_name}`"},
+                    )
+                    failed_reads.append(dim_data)
+                    continue
+
+                dim_tables[table_name] = dim_data.unwrap()
+
+            encoded_fact = tf.replace_col_with_id(cleaned_fact, dim_tables)
+
+            if not is_successful(encoded_fact):
+                uow.logger.error(
+                    {
+                        "guid": uow.guid,
+                        "msg": f"failed to replace cols with ids for table: `{encoded_fact}`",
+                    },
+                )
+                continue
+
+            encoded_fact = encoded_fact.unwrap()
+
+            res = uow.repo.io.write(
+                encoded_fact.table,
+                "fact_weather",
+                FileType.SQLITE3,
+                if_table_exists="append",
+            )
+
+            if not is_successful(res):
+                uow.logger.error(
+                    {"guid": uow.guid, "msg": f"failed write fact_table for path: `{path}`"},
+                )
+                failed_writes.append(res)
+                continue
+
+            uow.logger.info(
+                {"guid": uow.guid, "msg": f"successfully updated fact table for path: `{path}`"},
+            )
 
 
 def update_dim_table(
@@ -71,7 +114,7 @@ def update_dim_table(
 
         if not is_successful(dim_table):
             failed_reads.append(dim_table)
-            uow.logger.info({"guid": uow.guid, "msg": f"failed to read table `{table_name}`"})
+            uow.logger.error({"guid": uow.guid, "msg": f"failed to read table `{table_name}`"})
             return False
 
         uow.logger.info({"guid": uow.guid, "msg": f"successfully read table `{table_name}`"})
@@ -101,6 +144,7 @@ def update_dim_table(
     )
 
     if not is_successful(write_result):
+        uow.logger.error({"guid": uow.guid, "msg": f"failed to write table `{table_name}`"})
         failed_writes.append(write_result)
         return False
 

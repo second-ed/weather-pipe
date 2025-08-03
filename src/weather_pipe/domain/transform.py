@@ -6,11 +6,7 @@ import attrs
 import polars as pl
 from returns.result import safe
 
-from weather_pipe.domain.data_structures import (
-    CleanedTable,
-    RawTable,
-    UnnestedTable,
-)
+from weather_pipe.domain.data_structures import CleanedTable, EncodedTable, RawTable, UnnestedTable
 
 
 @safe
@@ -69,3 +65,18 @@ def clean_text_cols(unnested_table: UnnestedTable) -> CleanedTable:
         ],
     )
     return cleaned_table
+
+
+@safe
+def replace_col_with_id(
+    cleaned_table: CleanedTable,
+    dim_tables: dict[str, pl.DataFrame],
+) -> EncodedTable:
+    encoded_tables = EncodedTable(*attrs.astuple(cleaned_table))
+    for col, dim in dim_tables.items():
+        encoded_tables.table = encoded_tables.table.join(
+            dim,
+            on=col,
+            how="left",
+        ).drop(col)
+    return encoded_tables
