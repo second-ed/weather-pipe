@@ -22,7 +22,7 @@ class PolarsIO:
         if self.db_name:
             os.makedirs(os.path.dirname(self.db_name), exist_ok=True)
             self.conn = sqlite3.connect(self.db_name)
-            self.uri = f"sqlite3:///{self.db_name}"
+            self.uri = f"sqlite:///{self.db_name}"
         return True
 
     def teardown(self) -> bool:
@@ -64,7 +64,8 @@ class PolarsIO:
                 data.write_database(
                     table_name=path,
                     connection=self.uri,
-                    engine="sqlalchemy" ** kwargs,
+                    engine="sqlalchemy",
+                    **kwargs,
                 )
             case FileType.YAML:
                 with open(path, "w", encoding="utf-8") as f:

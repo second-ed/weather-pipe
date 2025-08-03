@@ -1,9 +1,10 @@
 import attrs
-import polars as pl
 from returns.pipeline import is_successful
 
 import weather_pipe.domain.data_structures as ds
 import weather_pipe.domain.transform as tf
+from weather_pipe.adapters.io_wrappers._io_protocol import FileType
+from weather_pipe.domain import utils
 from weather_pipe.service_layer.uow import UnitOfWorkProtocol
 from weather_pipe.usecases._event import Event
 
@@ -11,21 +12,71 @@ from weather_pipe.usecases._event import Event
 @attrs.define
 class PromoteToBronzeLayer(Event):
     db_path: str = attrs.field(default="")
+    table_names: list = attrs.field(default=attrs.Factory(list))
 
 
 def bronze_layer_handler(event: PromoteToBronzeLayer, uow: UnitOfWorkProtocol) -> None:
-    paths = uow.repo.list(event.src_root)
+    with uow:
+        paths = uow.repo.list(event.src_root)
+        uow.logger.info(f"found {len(paths)} files")
 
-    failed_files = {}
+        failed_reads, failed_writes = [], []
 
-    for path in paths:
-        big_table = pl.read_parquet(path)
-        res = tf.unnest_struct_cols(ds.RawTable(table=big_table)).bind(tf.clean_text_cols)
+        for path in paths:
+            raw_df = uow.repo.io.read(path, FileType.PARQUET)
 
-        if not is_successful(res):
-            failed_files[path] = res
-            continue
+            if not is_successful(raw_df):
+                failed_reads.append(raw_df)
+                uow.logger.info(f"failed to read fact table for path: `{path}`")
+                continue
 
-        # update dim tables
-        # update fact table
-        # delete (or archive) file
+            raw_df = raw_df.unwrap()
+            cleaned_fact = tf.unnest_struct_cols(ds.RawTable(table=raw_df)).bind(tf.clean_text_cols)
+
+            if not is_successful(cleaned_fact):
+                failed_reads.append(cleaned_fact)
+                uow.logger.info(f"failed to unnest and clean fact table for path: `{path}`")
+                continue
+
+            cleaned_fact = cleaned_fact.unwrap()
+
+            for table_name in event.table_names:
+                table_exists = uow.repo.io.conn.execute(
+                    f"SELECT tbl_name FROM sqlite_master WHERE type='table' AND tbl_name='{table_name}'",  # noqa: S608
+                ).fetchall()
+
+                if table_exists:
+                    uow.logger.info(f"table exists, attempting to read table `{table_name}`")
+                    dim_table = uow.repo.io.read(f"SELECT * FROM {table_name}", FileType.SQLITE3)  # noqa: S608
+
+                    if not is_successful(dim_table):
+                        failed_reads.append(dim_table)
+                        uow.logger.info(f"failed to read table `{table_name}`")
+                        continue
+
+                    uow.logger.info(f"successfully read table `{table_name}`")
+                    dim_table = dim_table.unwrap()
+                else:
+                    uow.logger.info(f"`{table_name}` doesn't exist, creating empty one")
+                    dim_table = utils.get_empty_dim_table(table_name)
+
+                updated_dim_table = utils.update_dim_table(
+                    dim_table,
+                    cleaned_fact.table,
+                    table_name,
+                )
+                if updated_dim_table.equals(dim_table):
+                    uow.logger.info("no update to dim table, skipping write")
+                    continue
+
+                write_result = uow.repo.io.write(
+                    dim_table,
+                    table_name,
+                    FileType.SQLITE3,
+                    if_table_exists="replace",
+                )
+
+                if is_successful(write_result):
+                    uow.logger.info(f"successfully updated table `{table_name}`")
+                else:
+                    failed_writes.append(write_result)
