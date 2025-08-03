@@ -1,17 +1,25 @@
 from functools import partial
 
-from returns.pipeline import is_successful, pipe
+import attrs
+from returns.pipeline import pipe
 from returns.pointfree import bind
-from returns.result import Failure
+from returns.result import Failure, Result
 
 from weather_pipe.adapters.io_wrappers._io_protocol import FileType
 from weather_pipe.domain.data_structures import ApiConfig
 from weather_pipe.domain.transform import add_ingestion_columns, clean_str, convert_json_to_df
 from weather_pipe.service_layer.uow import UnitOfWorkProtocol
-from weather_pipe.usecases.events import IngestToRawZone, PromoteToBronzeLayer
+from weather_pipe.usecases._event import Event
 
 
-def raw_layer_handler(event: IngestToRawZone, uow: UnitOfWorkProtocol) -> None:
+@attrs.define
+class IngestToRawZone(Event):
+    config_path: str = attrs.field(default="")
+    repo_root: str = attrs.field(default="")
+    api_key: str = attrs.field(default="", repr=False)
+
+
+def raw_layer_handler(event: IngestToRawZone, uow: UnitOfWorkProtocol) -> Result:
     with uow:
         uow.logger.info({"guid": uow.guid, "event": event})
         config_res = uow.repo.io.read(event.config_path, FileType.YAML)
@@ -52,10 +60,4 @@ def raw_layer_handler(event: IngestToRawZone, uow: UnitOfWorkProtocol) -> None:
         result = pipeline(api_config)
         uow.logger.info({"guid": uow.guid, "event": event, "result": result})
 
-    if is_successful(result):
-        return PromoteToBronzeLayer()
-    return None
-
-
-def bronze_layer_handler(event: PromoteToBronzeLayer, uow: UnitOfWorkProtocol) -> None:
-    pass
+    return result

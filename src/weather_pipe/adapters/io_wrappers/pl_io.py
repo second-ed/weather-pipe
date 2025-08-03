@@ -15,11 +15,15 @@ from weather_pipe.domain.data_structures import ApiConfig
 @attrs.define
 class PolarsIO:
     db_name: str = attrs.field(default="")
+    uri: str = attrs.field(default="")
     conn: sqlite3.Connection | None = attrs.field(default=None)  # noqa: FA102
 
     def setup(self) -> bool:
         if self.db_name:
+            if self.db_name != ":memory:":
+                os.makedirs(os.path.dirname(self.db_name), exist_ok=True)
             self.conn = sqlite3.connect(self.db_name)
+            self.uri = f"sqlite:///{self.db_name}"
         return True
 
     def teardown(self) -> bool:
@@ -37,7 +41,7 @@ class PolarsIO:
             case FileType.PARQUET:
                 return pl.read_parquet(path, **kwargs)
             case FileType.SQLITE3:
-                return pl.read_database(query=path, connection=self.conn, **kwargs)
+                return pl.read_database_uri(query=path, uri=self.uri, engine="connectorx", **kwargs)
             case FileType.YAML:
                 with open(path) as f:
                     return yaml.safe_load(f)
@@ -47,7 +51,8 @@ class PolarsIO:
 
     @safe
     def write(self, data: Data, path: str, file_type: FileType, **kwargs: dict) -> bool:
-        os.makedirs(os.path.dirname(path), exist_ok=True)
+        if file_type != FileType.SQLITE3:
+            os.makedirs(os.path.dirname(path), exist_ok=True)
 
         match file_type:
             case FileType.CSV:
@@ -59,7 +64,8 @@ class PolarsIO:
             case FileType.SQLITE3:
                 data.write_database(
                     table_name=path,
-                    connection=self.conn,
+                    connection=self.uri,
+                    engine="sqlalchemy",
                     **kwargs,
                 )
             case FileType.YAML:

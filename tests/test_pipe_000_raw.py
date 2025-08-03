@@ -9,7 +9,7 @@ from weather_pipe.adapters.io_wrappers._io_protocol import FakeIOWrapper, FileTy
 from weather_pipe.adapters.logger import FakeLogger
 from weather_pipe.service_layer.message_bus import MessageBus
 from weather_pipe.service_layer.uow import UnitOfWork
-from weather_pipe.usecases import EVENT_HANDLERS, events
+from weather_pipe.usecases import EVENT_HANDLERS, bronze_layer, parse_event, raw_layer
 
 from .conftest import JSON_RESPONSE
 
@@ -62,7 +62,7 @@ def test_raw_pipe(args, expected_result):
         },
     }
     db = defaultdict(dict, db)
-    event = events.parse_event(args)
+    event = parse_event(args)
     logger = FakeLogger()
 
     raw_repo = repo.Repo(io=FakeIOWrapper(db=db, external_src=external_src), fs=FakeFileSystem())
@@ -72,13 +72,13 @@ def test_raw_pipe(args, expected_result):
     )
 
     uows = {
-        events.IngestToRawZone: UnitOfWork(
+        raw_layer.IngestToRawZone: UnitOfWork(
             repo=raw_repo,
             logger=logger,
             clock_func=fake_clock_now,
             guid_func=fixed_guid,
         ),
-        events.PromoteToBronzeLayer: UnitOfWork(
+        bronze_layer.PromoteToBronzeLayer: UnitOfWork(
             repo=bronze_repo,
             logger=logger,
             clock_func=fake_clock_now,
@@ -86,12 +86,10 @@ def test_raw_pipe(args, expected_result):
         ),
     }
 
-    bus = MessageBus(event_handlers=EVENT_HANDLERS, uows=uows)
-    bus.add_events([event])
-    bus.handle_events()
+    bus = MessageBus(event_handlers=EVENT_HANDLERS, uows=uows).add_events([event]).handle_events()
 
     # the pipe should've logged the expected result
-    assert bus.uows[events.IngestToRawZone].logger.log == expected_result
+    assert bus.uows[raw_layer.IngestToRawZone].logger.log == expected_result
 
     if "Success" in expected_result:
-        assert len(bus.uows[events.IngestToRawZone].repo.io.db[FileType.PARQUET]) > 0
+        assert len(bus.uows[raw_layer.IngestToRawZone].repo.io.db[FileType.PARQUET]) > 0
