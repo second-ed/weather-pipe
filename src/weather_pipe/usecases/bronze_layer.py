@@ -55,10 +55,10 @@ def bronze_layer_handler(event: PromoteToBronzeLayer, uow: UnitOfWorkProtocol) -
                 dim_data = uow.repo.io.read(f"SELECT * FROM {table_name}", FileType.SQLITE3)  # noqa: S608
 
                 if not is_successful(dim_data):
+                    failed_reads.append(dim_data)
                     uow.logger.error(
                         {"guid": uow.guid, "msg": f"failed to read table: `{table_name}`"},
                     )
-                    failed_reads.append(dim_data)
                     continue
 
                 dim_tables[table_name] = dim_data.unwrap()
@@ -84,10 +84,10 @@ def bronze_layer_handler(event: PromoteToBronzeLayer, uow: UnitOfWorkProtocol) -
             )
 
             if not is_successful(res):
+                failed_writes.append(res)
                 uow.logger.error(
                     {"guid": uow.guid, "msg": f"failed write fact_table for path: `{path}`"},
                 )
-                failed_writes.append(res)
                 continue
 
             uow.logger.info(
@@ -144,8 +144,8 @@ def update_dim_table(
     )
 
     if not is_successful(write_result):
-        uow.logger.error({"guid": uow.guid, "msg": f"failed to write table `{table_name}`"})
         failed_writes.append(write_result)
+        uow.logger.error({"guid": uow.guid, "msg": f"failed to write table `{table_name}`"})
         return False
 
     uow.logger.info({"guid": uow.guid, "msg": f"successfully updated table `{table_name}`"})
