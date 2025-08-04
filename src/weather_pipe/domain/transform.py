@@ -4,9 +4,9 @@ from copy import deepcopy
 
 import attrs
 import polars as pl
-from returns.result import safe
 
 from weather_pipe.domain.data_structures import CleanedTable, EncodedTable, RawTable, UnnestedTable
+from weather_pipe.domain.result import safe
 
 
 @safe

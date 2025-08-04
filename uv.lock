@@ -991,18 +991,6 @@ wheels = [
 ]
 
 [[package]]
-name = "returns"
-version = "0.24.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "typing-extensions" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/81/d4/af041bedc0c304592f052b9a4d6dcbd220a46d730a1fc690c3bfd4dc8c76/returns-0.24.0.tar.gz", hash = "sha256:735091cc798cac3f7cf8566b171922119f7796f2e49d6f65939f3e5a9c7c97f7", size = 107005 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c6/41/16c192627016fff4989350d883ad82c39f58ade2810a967a67d942658a2d/returns-0.24.0-py3-none-any.whl", hash = "sha256:de82455a76b9fcd86810a49099fa7645eb20920105bc78b942b2f4923c829624", size = 158037 },
-]
-
-[[package]]
 name = "rich"
 version = "13.9.4"
 source = { registry = "https://pypi.org/simple" }
@@ -1225,7 +1213,6 @@ dependencies = [
     { name = "python-dotenv" },
     { name = "pyyaml" },
     { name = "requests" },
-    { name = "returns" },
     { name = "structlog" },
 ]
 
@@ -1248,7 +1235,6 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "requests", specifier = ">=2.32.3" },
-    { name = "returns", specifier = ">=0.24.0" },
     { name = "structlog", specifier = ">=25.1.0" },
 ]
 

@@ -4,7 +4,6 @@ import polars as pl
 import pytest
 from hypothesis import given
 from hypothesis.strategies import text
-from returns.result import Failure, Success
 
 import weather_pipe.domain.data_structures as ds
 import weather_pipe.domain.transform as tf
@@ -30,14 +29,13 @@ import weather_pipe.domain.transform as tf
 def test_add_ingestion_columns(df, batch_guid, date_time, err):
     result = tf.add_ingestion_columns(df, batch_guid, date_time)
 
-    match result:
-        case Success(inner):
-            assert inner["row_guid"].n_unique() == len(inner)
-            assert inner["batch_guid"].eq(batch_guid).all()
-            assert inner["ingestion_datetime"].eq(date_time).all()
-
-        case Failure(inner):
-            assert inner.args == err
+    if result.is_ok():
+        inner = result.inner
+        assert inner["row_guid"].n_unique() == len(inner)
+        assert inner["batch_guid"].eq(batch_guid).all()
+        assert inner["ingestion_datetime"].eq(date_time).all()
+    else:
+        assert result.error.args == err
 
 
 @given(text())
@@ -76,6 +74,6 @@ def test_transform_tables(df, expected_fact_table):
     layer_tables = ds.RawTable(table=df)
     res = tf.unnest_struct_cols(layer_tables).bind(tf.clean_text_cols)
 
-    assert isinstance(res, Success)
-    encoded_tables = res.unwrap()
+    assert res.is_ok()
+    encoded_tables = res.inner
     assert encoded_tables.table.to_dicts() == expected_fact_table

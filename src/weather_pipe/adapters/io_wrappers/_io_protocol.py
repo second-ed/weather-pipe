@@ -1,11 +1,11 @@
 from enum import Enum, auto
-from typing import Any, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 import attrs
 import polars as pl
-from returns.result import Result, Success, safe
 
 from weather_pipe.domain.data_structures import ApiConfig
+from weather_pipe.domain.result import Ok, Result, safe
 
 Data = pl.DataFrame | dict
 
@@ -28,7 +28,7 @@ class IOWrapperProtocol(Protocol):
 
     def write(self, data: Data, path: str, file_type: FileType, **kwargs: dict) -> bool: ...
 
-    def extract_data(self, api_config: ApiConfig) -> Result[dict[str, Any], Exception]: ...
+    def extract_data(self, api_config: ApiConfig) -> Result: ...
 
 
 @attrs.define
@@ -55,5 +55,5 @@ class FakeIOWrapper:
         self.db[file_type][path] = data
         return True
 
-    def extract_data(self, api_config: ApiConfig) -> Result[dict[str, Any], Exception]:
-        return Success(self.external_src[api_config.location])
+    def extract_data(self, api_config: ApiConfig) -> Result:
+        return Ok(self.external_src[api_config.location])

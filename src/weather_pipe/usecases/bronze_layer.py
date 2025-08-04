@@ -1,11 +1,10 @@
 import attrs
-from returns.pipeline import is_successful
-from returns.result import Failure
 
 import weather_pipe.domain.data_structures as ds
 import weather_pipe.domain.transform as tf
 from weather_pipe.adapters.io_wrappers._io_protocol import FileType
 from weather_pipe.domain import utils
+from weather_pipe.domain.result import Err
 from weather_pipe.service_layer.uow import UnitOfWorkProtocol
 from weather_pipe.usecases._event import Event
 
@@ -26,7 +25,7 @@ def bronze_layer_handler(event: PromoteToBronzeLayer, uow: UnitOfWorkProtocol) -
         for path in paths:
             raw_df = uow.repo.io.read(path, FileType.PARQUET)
 
-            if not is_successful(raw_df):
+            if not raw_df.is_ok():
                 failed_reads.append(raw_df)
                 uow.logger.error(
                     {"guid": uow.guid, "msg": f"failed to read fact table for path: `{path}`"},
@@ -36,7 +35,7 @@ def bronze_layer_handler(event: PromoteToBronzeLayer, uow: UnitOfWorkProtocol) -
             raw_df = raw_df.unwrap()
             cleaned_fact = tf.unnest_struct_cols(ds.RawTable(table=raw_df)).bind(tf.clean_text_cols)
 
-            if not is_successful(cleaned_fact):
+            if not cleaned_fact.is_ok():
                 failed_reads.append(cleaned_fact)
                 uow.logger.error(
                     {
@@ -54,7 +53,7 @@ def bronze_layer_handler(event: PromoteToBronzeLayer, uow: UnitOfWorkProtocol) -
                 update_dim_table(uow, cleaned_fact, table_name, failed_reads, failed_writes)
                 dim_data = uow.repo.io.read(f"SELECT * FROM {table_name}", FileType.SQLITE3)  # noqa: S608
 
-                if not is_successful(dim_data):
+                if not dim_data.is_ok():
                     failed_reads.append(dim_data)
                     uow.logger.error(
                         {"guid": uow.guid, "msg": f"failed to read table: `{table_name}`"},
@@ -65,7 +64,7 @@ def bronze_layer_handler(event: PromoteToBronzeLayer, uow: UnitOfWorkProtocol) -
 
             encoded_fact = tf.replace_col_with_id(cleaned_fact, dim_tables)
 
-            if not is_successful(encoded_fact):
+            if not encoded_fact.is_ok():
                 uow.logger.error(
                     {
                         "guid": uow.guid,
@@ -83,7 +82,7 @@ def bronze_layer_handler(event: PromoteToBronzeLayer, uow: UnitOfWorkProtocol) -
                 if_table_exists="append",
             )
 
-            if not is_successful(res):
+            if not res.is_ok():
                 failed_writes.append(res)
                 uow.logger.error(
                     {"guid": uow.guid, "msg": f"failed write fact_table for path: `{path}`"},
@@ -99,8 +98,8 @@ def update_dim_table(
     uow: UnitOfWorkProtocol,
     cleaned_fact: ds.CleanedTable,
     table_name: str,
-    failed_reads: list[Failure],
-    failed_writes: list[Failure],
+    failed_reads: list[Err],
+    failed_writes: list[Err],
 ) -> bool:
     table_exists = uow.repo.io.conn.execute(
         f"SELECT tbl_name FROM sqlite_master WHERE type='table' AND tbl_name='{table_name}'",  # noqa: S608
@@ -112,7 +111,7 @@ def update_dim_table(
         )
         dim_table = uow.repo.io.read(f"SELECT * FROM {table_name}", FileType.SQLITE3)  # noqa: S608
 
-        if not is_successful(dim_table):
+        if not dim_table.is_ok():
             failed_reads.append(dim_table)
             uow.logger.error({"guid": uow.guid, "msg": f"failed to read table `{table_name}`"})
             return False
@@ -143,7 +142,7 @@ def update_dim_table(
         if_table_exists="replace",
     )
 
-    if not is_successful(write_result):
+    if not write_result.is_ok():
         failed_writes.append(write_result)
         uow.logger.error({"guid": uow.guid, "msg": f"failed to write table `{table_name}`"})
         return False

@@ -4,7 +4,8 @@ import glob
 import os
 
 import polars as pl
-from returns.result import Failure, Result, Success, safe
+
+from weather_pipe.domain.result import Failure, Result, Success, safe
 
 
 @safe
