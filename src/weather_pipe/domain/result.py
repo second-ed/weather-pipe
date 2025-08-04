@@ -21,9 +21,6 @@ class Ok:
     def is_ok(self) -> Literal[True]:
         return True
 
-    def is_err(self) -> Literal[False]:
-        return False
-
     def map(self, func: Callable[[T], U]) -> Ok[U]:
         return Ok(func(self.inner))
 
@@ -71,16 +68,13 @@ class Err:
     def is_ok(self) -> Literal[False]:
         return False
 
-    def is_err(self) -> Literal[True]:
-        return True
-
     def map(self, _: Callable[[T], U]) -> Self:
         return self
 
     def flatten(self) -> Self:
         return self
 
-    def bind(self) -> Self:
+    def bind(self, _: Callable[[T], U]) -> Self:
         return self
 
 
