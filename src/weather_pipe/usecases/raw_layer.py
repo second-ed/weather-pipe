@@ -21,6 +21,7 @@ def raw_layer_handler(event: IngestToRawZone, uow: UnitOfWorkProtocol) -> Result
     with uow:
         uow.logger.info({"guid": uow.guid, "event": event})
         config_res = uow.repo.io.read(event.config_path, FileType.YAML)
+
         if not config_res.is_ok():
             uow.logger.error({"guid": uow.guid, "event": event, "result": config_res})
             return config_res
@@ -31,6 +32,7 @@ def raw_layer_handler(event: IngestToRawZone, uow: UnitOfWorkProtocol) -> Result
             location=config.get("api_config", {}).get("location"),
             request_type=config.get("api_config", {}).get("request_type"),
         )
+
         init_convert_json_to_df = partial(
             convert_json_to_df,
             table_path=config.get("table_path", []),

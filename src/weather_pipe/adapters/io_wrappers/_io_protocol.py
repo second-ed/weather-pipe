@@ -1,4 +1,5 @@
-from enum import Enum, auto
+import sqlite3
+from enum import Enum
 from typing import Protocol, runtime_checkable
 
 import attrs
@@ -11,11 +12,11 @@ Data = pl.DataFrame | dict
 
 
 class FileType(Enum):
-    PARQUET = auto()
-    CSV = auto()
-    JSON = auto()
-    SQLITE3 = auto()
-    YAML = auto()
+    PARQUET = ".parquet"
+    CSV = ".csv"
+    JSON = ".json"
+    SQLITE3 = ".db"
+    YAML = ".yaml"
 
 
 @runtime_checkable
@@ -36,9 +37,13 @@ class FakeIOWrapper:
     db: dict = attrs.field(default=attrs.Factory(dict))
     db_name: str = attrs.field(default="")
     log: list = attrs.field(default=attrs.Factory(list))
+    uri: str = attrs.field(default="")
+    conn: sqlite3.Connection | None = attrs.field(default=None)  # noqa: FA102
     external_src: dict = attrs.field(default=attrs.Factory(dict))
 
     def setup(self) -> bool:
+        if self.uri:
+            self.conn = sqlite3.connect(self.uri)
         return True
 
     def teardown(self) -> bool:
@@ -47,12 +52,25 @@ class FakeIOWrapper:
     @safe
     def read(self, path: str, file_type: FileType, **kwargs: dict) -> Data:
         self.log.append({"func": "read", "path": path, "file_type": file_type, "kwargs": kwargs})
-        return self.db[file_type][path]
+        match file_type:
+            case FileType.SQLITE3:
+                return pl.read_database_uri(query=path, uri=self.uri, engine="connectorx", **kwargs)
+            case _:
+                return self.db[path]
 
     @safe
     def write(self, data: Data, path: str, file_type: FileType, **kwargs: dict) -> bool:
         self.log.append({"func": "write", "path": path, "file_type": file_type, "kwargs": kwargs})
-        self.db[file_type][path] = data
+        match file_type:
+            case FileType.SQLITE3:
+                data.write_database(
+                    table_name=path,
+                    connection=self.uri,
+                    engine="sqlalchemy",
+                    **kwargs,
+                )
+            case _:
+                self.db[path] = data
         return True
 
     def extract_data(self, api_config: ApiConfig) -> Result:

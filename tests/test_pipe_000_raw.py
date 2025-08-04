@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 import pytest
 
 from weather_pipe.adapters import repo
@@ -53,15 +51,12 @@ def test_raw_pipe(args, expected_result):
 
     external_src = {"Liverpool": JSON_RESPONSE}
     db = {
-        FileType.YAML: {
-            "path/to/config.yaml": {
-                "api_config": {"location": "Liverpool", "request_type": "forecast"},
-                "table_path": ["forecast", "forecastday", 0, "hour"],
-                "save_dir": "data/raw",
-            },
+        "path/to/config.yaml": {
+            "api_config": {"location": "Liverpool", "request_type": "forecast"},
+            "table_path": ["forecast", "forecastday", 0, "hour"],
+            "save_dir": "data/raw",
         },
     }
-    db = defaultdict(dict, db)
     event = parse_event(args)
     logger = FakeLogger()
 
@@ -91,5 +86,5 @@ def test_raw_pipe(args, expected_result):
     # the pipe should've logged the expected result
     assert bus.uows[raw_layer.IngestToRawZone].logger.log == expected_result
 
-    if "Success" in expected_result:
+    if "Ok" in expected_result:
         assert len(bus.uows[raw_layer.IngestToRawZone].repo.io.db[FileType.PARQUET]) > 0

@@ -48,7 +48,8 @@ class Err:
     def __attrs_post_init__(self) -> None:
         self.err_type = type(self.error)
         self.err_msg = str(self.error)
-        self.details = self.extract_details(self.error.__traceback__)
+        if self.error:
+            self.details = self.extract_details(self.error.__traceback__)
 
     def extract_details(self, tb: TracebackType) -> list[dict[str, Any]]:
         trace_info = []

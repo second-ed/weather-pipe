@@ -4,7 +4,7 @@ import weather_pipe.domain.data_structures as ds
 import weather_pipe.domain.transform as tf
 from weather_pipe.adapters.io_wrappers._io_protocol import FileType
 from weather_pipe.domain import utils
-from weather_pipe.domain.result import Err
+from weather_pipe.domain.result import Err, Ok
 from weather_pipe.service_layer.uow import UnitOfWorkProtocol
 from weather_pipe.usecases._event import Event
 
@@ -32,7 +32,7 @@ def bronze_layer_handler(event: PromoteToBronzeLayer, uow: UnitOfWorkProtocol) -
                 )
                 continue
 
-            raw_df = raw_df.unwrap()
+            raw_df = raw_df.inner
             cleaned_fact = tf.unnest_struct_cols(ds.RawTable(table=raw_df)).bind(tf.clean_text_cols)
 
             if not cleaned_fact.is_ok():
@@ -45,7 +45,7 @@ def bronze_layer_handler(event: PromoteToBronzeLayer, uow: UnitOfWorkProtocol) -
                 )
                 continue
 
-            cleaned_fact = cleaned_fact.unwrap()
+            cleaned_fact = cleaned_fact.inner
 
             dim_tables = {}
 
@@ -60,7 +60,7 @@ def bronze_layer_handler(event: PromoteToBronzeLayer, uow: UnitOfWorkProtocol) -
                     )
                     continue
 
-                dim_tables[table_name] = dim_data.unwrap()
+                dim_tables[table_name] = dim_data.inner
 
             encoded_fact = tf.replace_col_with_id(cleaned_fact, dim_tables)
 
@@ -73,7 +73,7 @@ def bronze_layer_handler(event: PromoteToBronzeLayer, uow: UnitOfWorkProtocol) -
                 )
                 continue
 
-            encoded_fact = encoded_fact.unwrap()
+            encoded_fact = encoded_fact.inner
 
             res = uow.repo.io.write(
                 encoded_fact.table,
@@ -92,6 +92,11 @@ def bronze_layer_handler(event: PromoteToBronzeLayer, uow: UnitOfWorkProtocol) -
             uow.logger.info(
                 {"guid": uow.guid, "msg": f"successfully updated fact table for path: `{path}`"},
             )
+
+    fails = failed_reads + failed_writes
+    if fails:
+        return Err(fails)
+    return Ok(inner=True)
 
 
 def update_dim_table(
@@ -117,7 +122,7 @@ def update_dim_table(
             return False
 
         uow.logger.info({"guid": uow.guid, "msg": f"successfully read table `{table_name}`"})
-        dim_table = dim_table.unwrap()
+        dim_table = dim_table.inner
     else:
         uow.logger.info(
             {"guid": uow.guid, "msg": f"`{table_name}` doesn't exist, creating empty one"},
