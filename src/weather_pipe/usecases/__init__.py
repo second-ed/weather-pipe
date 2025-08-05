@@ -3,8 +3,8 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Callable
 
-from src.weather_pipe.usecases._event import Event
 from weather_pipe.usecases import bronze_layer, raw_layer
+from weather_pipe.usecases._event import Event
 
 EventHandlers = dict[type, Callable[[Event], Event | Sequence[Event] | None]]
 
