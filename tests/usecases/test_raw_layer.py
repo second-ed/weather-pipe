@@ -1,5 +1,6 @@
 import pytest
 
+from tests.conftest import JSON_RESPONSE
 from weather_pipe.adapters import repo
 from weather_pipe.adapters.clock import fake_clock_now
 from weather_pipe.adapters.fs_wrappers._fs_protocol import FakeFileSystem
@@ -8,8 +9,6 @@ from weather_pipe.adapters.logger import FakeLogger
 from weather_pipe.service_layer.message_bus import MessageBus
 from weather_pipe.service_layer.uow import UnitOfWork
 from weather_pipe.usecases import EVENT_HANDLERS, bronze_layer, parse_event, raw_layer
-
-from .conftest import JSON_RESPONSE
 
 
 @pytest.mark.parametrize(
