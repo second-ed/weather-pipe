@@ -1,5 +1,6 @@
 import pytest
 
+from tests.conftest import JSON_RESPONSE
 from weather_pipe.adapters import repo
 from weather_pipe.adapters.clock import fake_clock_now
 from weather_pipe.adapters.fs_wrappers._fs_protocol import FakeFileSystem
@@ -8,8 +9,6 @@ from weather_pipe.adapters.logger import FakeLogger
 from weather_pipe.service_layer.message_bus import MessageBus
 from weather_pipe.service_layer.uow import UnitOfWork
 from weather_pipe.usecases import EVENT_HANDLERS, bronze_layer, parse_event, raw_layer
-
-from .conftest import JSON_RESPONSE
 
 
 @pytest.mark.parametrize(
@@ -22,10 +21,10 @@ from .conftest import JSON_RESPONSE
                 "repo_root": "weather_pipe",
             },
             [
-                "INFO: {'guid': '123-abc', 'start_time': '20250527_194000', 'msg': 'Initialising UOW'}",
+                "INFO: {'guid': '123-abc', 'start_time': '2025-05-27 19:40:00+00:00', 'msg': 'Initialising UOW'}",
                 "INFO: {'guid': '123-abc', 'event': IngestToRawZone(priority_event=False, config_path='path/to/config.yaml', repo_root='weather_pipe')}",
                 "INFO: {'guid': '123-abc', 'event': IngestToRawZone(priority_event=False, config_path='path/to/config.yaml', repo_root='weather_pipe'), 'result': Ok(inner=True)}",
-                "INFO: {'guid': '123-abc', 'end_time': '20250527_194000', 'msg': 'Completed UOW'}",
+                "INFO: {'guid': '123-abc', 'end_time': '2025-05-27 19:40:00+00:00', 'msg': 'Completed UOW'}",
             ],
             id="ensure has success when given a valid config",
         ),
@@ -36,10 +35,10 @@ from .conftest import JSON_RESPONSE
                 "repo_root": "weather_pipe",
             },
             [
-                "INFO: {'guid': '123-abc', 'start_time': '20250527_194000', 'msg': 'Initialising UOW'}",
+                "INFO: {'guid': '123-abc', 'start_time': '2025-05-27 19:40:00+00:00', 'msg': 'Initialising UOW'}",
                 "INFO: {'guid': '123-abc', 'event': IngestToRawZone(priority_event=False, config_path='invalid_path.yaml', repo_root='weather_pipe')}",
                 "ERROR: {'guid': '123-abc', 'event': IngestToRawZone(priority_event=False, config_path='invalid_path.yaml', repo_root='weather_pipe'), 'result': Err(error=KeyError('invalid_path.yaml'))}",
-                "INFO: {'guid': '123-abc', 'end_time': '20250527_194000', 'msg': 'Completed UOW'}",
+                "INFO: {'guid': '123-abc', 'end_time': '2025-05-27 19:40:00+00:00', 'msg': 'Completed UOW'}",
             ],
             id="ensure reports failure reason if given invalid config",
         ),

@@ -20,4 +20,9 @@ def update_dim_table(existing_df: pl.DataFrame, new_df: pl.DataFrame, col: str) 
     new_entries = new_entries.with_row_index(name=f"{col}_id", offset=max_id + 1).with_columns(
         pl.col(f"{col}_id").cast(pl.Int64),
     )
-    return pl.concat([existing_df, new_entries])
+    if not new_entries.is_empty():
+        existing_df = existing_df.with_columns(
+            pl.col(f"{col}_id").cast(pl.Int64),
+        )
+        return pl.concat([existing_df, new_entries], how="diagonal")
+    return existing_df

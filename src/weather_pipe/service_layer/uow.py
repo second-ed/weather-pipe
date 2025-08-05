@@ -40,7 +40,7 @@ class UnitOfWork:
         self.guid = str(self.guid_func())
         self.start_time = self.clock_func()
         self.logger.info(
-            {"guid": self.guid, "start_time": self.start_time, "msg": "Initialising UOW"},
+            {"guid": self.guid, "start_time": str(self.start_time), "msg": "Initialising UOW"},
         )
 
         # generic setup ops
@@ -57,13 +57,13 @@ class UnitOfWork:
             self.logger.error(
                 {
                     "guid": self.guid,
-                    "end_time": self.clock_func(),
+                    "end_time": str(self.clock_func()),
                     "msg": exc_val,
                 },
             )
         else:
             self.logger.info(
-                {"guid": self.guid, "end_time": self.clock_func(), "msg": "Completed UOW"},
+                {"guid": self.guid, "end_time": str(self.clock_func()), "msg": "Completed UOW"},
             )
 
         # clean up afterwards

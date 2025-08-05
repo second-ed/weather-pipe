@@ -5,6 +5,7 @@ import os
 
 import polars as pl
 
+from weather_pipe.adapters.clock import fmt_time
 from weather_pipe.domain.result import Err, Ok, Result, safe
 
 
@@ -14,7 +15,7 @@ def combine_parquets(load_path: str, save_dir: str) -> str:
     lf = pl.scan_parquet(load_path)
     os.makedirs(save_dir, exist_ok=True)
     lf.sink_parquet(
-        f"{save_dir}/{os.path.basename(load_path.replace('*', date_time.strftime('%y%m%d_%H%M%S')))}",
+        f"{save_dir}/{os.path.basename(load_path.replace('*', fmt_time(date_time)))}",
     )
     return load_path
 

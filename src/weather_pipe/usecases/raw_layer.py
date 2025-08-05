@@ -2,6 +2,7 @@ from functools import partial
 
 import attrs
 
+from weather_pipe.adapters.clock import fmt_time
 from weather_pipe.adapters.io_wrappers._io_protocol import FileType
 from weather_pipe.domain.data_structures import ApiConfig
 from weather_pipe.domain.result import Result
@@ -44,7 +45,7 @@ def raw_layer_handler(event: IngestToRawZone, uow: UnitOfWorkProtocol) -> Result
         )
         cleaned_location = clean_str(api_config.location)
         save_dir = f"{event.repo_root}/{config.get('save_dir', '')}/{cleaned_location}"
-        filename = f"{uow.start_time}_{api_config.request_type}_{cleaned_location}"
+        filename = f"{fmt_time(uow.start_time)}_{api_config.request_type}_{cleaned_location}"
         init_write_parquet = partial(
             uow.repo.io.write,
             path=f"{save_dir}/{filename}.parquet",
