@@ -1,15 +1,14 @@
 import os
 import sqlite3
-from typing import Any
 
 import attrs
 import polars as pl
 import requests
 import yaml
-from returns.result import Failure, Result, Success, safe
 
 from weather_pipe.adapters.io_wrappers._io_protocol import Data, FileType
 from weather_pipe.domain.data_structures import ApiConfig
+from weather_pipe.domain.result import Err, Ok, Result, safe
 
 
 @attrs.define
@@ -75,10 +74,10 @@ class PolarsIO:
                 raise NotImplementedError(f"`{file_type}` is not implemented")
         return True
 
-    def extract_data(self, api_config: ApiConfig) -> Result[dict[str, Any], Exception]:
+    def extract_data(self, api_config: ApiConfig) -> Result:
         call = f"http://api.weatherapi.com/v1/{api_config.request_type}.json?key={api_config.api_key}&q={api_config.location}&aqi=no"
         response = requests.get(call, timeout=10)
 
         if response.status_code == 200:  # noqa: PLR2004
-            return Success(response.json())
-        return Failure(response)
+            return Ok(response.json())
+        return Err(response)

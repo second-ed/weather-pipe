@@ -10,9 +10,9 @@ if TYPE_CHECKING:
 
 @attrs.define
 class ApiConfig:
-    api_key: str = attrs.field(repr=False)
-    location: str = attrs.field()
-    request_type: str = attrs.field()
+    api_key: str = attrs.field(repr=False, validator=attrs.validators.instance_of(str))
+    location: str = attrs.field(validator=attrs.validators.instance_of(str))
+    request_type: str = attrs.field(validator=attrs.validators.instance_of(str))
 
 
 @attrs.define

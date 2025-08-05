@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 import pytest
 
 from weather_pipe.adapters import repo
@@ -26,7 +24,7 @@ from .conftest import JSON_RESPONSE
             [
                 "INFO: {'guid': '123-abc', 'start_time': '20250527_194000', 'msg': 'Initialising UOW'}",
                 "INFO: {'guid': '123-abc', 'event': IngestToRawZone(priority_event=False, config_path='path/to/config.yaml', repo_root='weather_pipe')}",
-                "INFO: {'guid': '123-abc', 'event': IngestToRawZone(priority_event=False, config_path='path/to/config.yaml', repo_root='weather_pipe'), 'result': <Success: True>}",
+                "INFO: {'guid': '123-abc', 'event': IngestToRawZone(priority_event=False, config_path='path/to/config.yaml', repo_root='weather_pipe'), 'result': Ok(inner=True)}",
                 "INFO: {'guid': '123-abc', 'end_time': '20250527_194000', 'msg': 'Completed UOW'}",
             ],
             id="ensure has success when given a valid config",
@@ -40,7 +38,7 @@ from .conftest import JSON_RESPONSE
             [
                 "INFO: {'guid': '123-abc', 'start_time': '20250527_194000', 'msg': 'Initialising UOW'}",
                 "INFO: {'guid': '123-abc', 'event': IngestToRawZone(priority_event=False, config_path='invalid_path.yaml', repo_root='weather_pipe')}",
-                "ERROR: {'guid': '123-abc', 'event': IngestToRawZone(priority_event=False, config_path='invalid_path.yaml', repo_root='weather_pipe'), 'result': <Failure: 'invalid_path.yaml'>}",
+                "ERROR: {'guid': '123-abc', 'event': IngestToRawZone(priority_event=False, config_path='invalid_path.yaml', repo_root='weather_pipe'), 'result': Err(error=KeyError('invalid_path.yaml'))}",
                 "INFO: {'guid': '123-abc', 'end_time': '20250527_194000', 'msg': 'Completed UOW'}",
             ],
             id="ensure reports failure reason if given invalid config",
@@ -53,15 +51,12 @@ def test_raw_pipe(args, expected_result):
 
     external_src = {"Liverpool": JSON_RESPONSE}
     db = {
-        FileType.YAML: {
-            "path/to/config.yaml": {
-                "api_config": {"location": "Liverpool", "request_type": "forecast"},
-                "table_path": ["forecast", "forecastday", 0, "hour"],
-                "save_dir": "data/raw",
-            },
+        "path/to/config.yaml": {
+            "api_config": {"location": "Liverpool", "request_type": "forecast"},
+            "table_path": ["forecast", "forecastday", 0, "hour"],
+            "save_dir": "data/raw",
         },
     }
-    db = defaultdict(dict, db)
     event = parse_event(args)
     logger = FakeLogger()
 
@@ -91,5 +86,5 @@ def test_raw_pipe(args, expected_result):
     # the pipe should've logged the expected result
     assert bus.uows[raw_layer.IngestToRawZone].logger.log == expected_result
 
-    if "Success" in expected_result:
+    if "Ok" in expected_result:
         assert len(bus.uows[raw_layer.IngestToRawZone].repo.io.db[FileType.PARQUET]) > 0

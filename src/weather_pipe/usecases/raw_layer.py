@@ -1,12 +1,10 @@
 from functools import partial
 
 import attrs
-from returns.pipeline import pipe
-from returns.pointfree import bind
-from returns.result import Failure, Result
 
 from weather_pipe.adapters.io_wrappers._io_protocol import FileType
 from weather_pipe.domain.data_structures import ApiConfig
+from weather_pipe.domain.result import Result
 from weather_pipe.domain.transform import add_ingestion_columns, clean_str, convert_json_to_df
 from weather_pipe.service_layer.uow import UnitOfWorkProtocol
 from weather_pipe.usecases._event import Event
@@ -23,16 +21,18 @@ def raw_layer_handler(event: IngestToRawZone, uow: UnitOfWorkProtocol) -> Result
     with uow:
         uow.logger.info({"guid": uow.guid, "event": event})
         config_res = uow.repo.io.read(event.config_path, FileType.YAML)
-        if isinstance(config_res, Failure):
+
+        if not config_res.is_ok():
             uow.logger.error({"guid": uow.guid, "event": event, "result": config_res})
-            return Failure({"err": config_res.failure()})
-        config = config_res.unwrap()
+            return config_res
+        config = config_res.inner
 
         api_config = ApiConfig(
             api_key=event.api_key,
             location=config.get("api_config", {}).get("location"),
             request_type=config.get("api_config", {}).get("request_type"),
         )
+
         init_convert_json_to_df = partial(
             convert_json_to_df,
             table_path=config.get("table_path", []),
@@ -51,13 +51,12 @@ def raw_layer_handler(event: IngestToRawZone, uow: UnitOfWorkProtocol) -> Result
             file_type=FileType.PARQUET,
         )
 
-        pipeline = pipe(
-            uow.repo.io.extract_data,
-            bind(init_convert_json_to_df),
-            bind(init_add_ingestion_columns),
-            bind(init_write_parquet),
+        result = (
+            uow.repo.io.extract_data(api_config)
+            .bind(init_convert_json_to_df)
+            .bind(init_add_ingestion_columns)
+            .bind(init_write_parquet)
         )
-        result = pipeline(api_config)
         uow.logger.info({"guid": uow.guid, "event": event, "result": result})
 
     return result
