@@ -42,8 +42,9 @@ class FakeIOWrapper:
     external_src: dict = attrs.field(default=attrs.Factory(dict))
 
     def setup(self) -> bool:
-        if self.uri:
-            self.conn = sqlite3.connect(self.uri)
+        if self.db_name:
+            self.conn = sqlite3.connect(self.db_name)
+            self.uri = f"sqlite:///{self.db_name}"
         return True
 
     def teardown(self) -> bool:
