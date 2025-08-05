@@ -5,7 +5,7 @@ import os
 
 import polars as pl
 
-from weather_pipe.domain.result import Failure, Result, Success, safe
+from weather_pipe.domain.result import Err, Ok, Result, safe
 
 
 @safe
@@ -30,8 +30,8 @@ def delete_files(load_path: str) -> Result[bool, list]:
             fails.append((f, e))
 
     if fails:
-        return Failure(fails)
-    return Success(inner_value=True)
+        return Err(fails)
+    return Ok(inner_value=True)
 
 
 if __name__ == "__main__":
