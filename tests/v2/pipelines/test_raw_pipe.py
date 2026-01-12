@@ -45,7 +45,7 @@ def test_raw_pipe(args, expected_result):
 
     bus = (
         MessageBus(event_handlers=EVENT_HANDLERS, adapter=adapter)
-        .add_events([IngestToRawZone(**args)])
+        .add_events([IngestToRawZone.from_dict(args)])
         .handle_events()
     )
 
