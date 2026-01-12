@@ -30,7 +30,7 @@ jobs:
         run: |
           git status
           git pull origin main
-          uv run ./src/weather_pipe/pipe_000_raw.py --config-path ./configs/raw_layer.yaml --api-key ${{ secrets.WEATHER_API_KEY }}
+          uv run ./src/weather_pipe/v2/pipelines/raw_pipe.py --config-path ./configs/raw_layer.yaml --api-key ${{ secrets.WEATHER_API_KEY }}
 
       - name: Checkout branch
         run: |
