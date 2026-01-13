@@ -46,7 +46,6 @@
 ├── warehouse
 │   └── models
 │       └── bronze
-│           ├── dedupe_bronze.sql
 │           └── raw_to_bronze.sql
 ├── .pre-commit-config.yaml
 ├── README.md
