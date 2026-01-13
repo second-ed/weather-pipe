@@ -4,9 +4,9 @@ import glob
 import os
 
 import polars as pl
+from danom import Err, Ok, Result, safe
 
-from weather_pipe.adapters.clock import fmt_time
-from weather_pipe.domain.result import Err, Ok, Result, safe
+from weather_pipe.v2.layers.raw.transform import fmt_time
 
 
 @safe

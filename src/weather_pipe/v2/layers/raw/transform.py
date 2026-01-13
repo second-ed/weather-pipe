@@ -33,13 +33,15 @@ def convert_json_to_df(data: dict, table_path: list) -> pl.DataFrame:
 @safe
 def add_ingestion_columns(
     df: pl.DataFrame,
+    location: str,
     batch_guid: str,
     date_time: str,
 ) -> pl.DataFrame:
     return df.with_columns(
-        pl.Series("row_guid", [str(uuid.uuid4()) for _ in range(len(df))]),
-        pl.lit(batch_guid).alias("batch_guid"),
-        pl.lit(date_time).alias("ingestion_datetime"),
+        pl.lit(location).alias("location"),
+        pl.Series("sys_col_row_guid", [str(uuid.uuid4()) for _ in range(len(df))]),
+        pl.lit(batch_guid).alias("sys_col_batch_guid"),
+        pl.lit(date_time).alias("sys_col_ingestion_datetime"),
     )
 
 
