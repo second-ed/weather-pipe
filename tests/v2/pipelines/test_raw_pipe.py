@@ -51,4 +51,4 @@ def test_raw_pipe(args, expected_result):
 
     bus.adapter.files[
         "weather_pipe/data/raw/liverpool/20250101_120000_forecast_liverpool.parquet"
-    ].drop("row_guid").to_dicts()
+    ].drop("sys_col_row_guid").to_dicts()

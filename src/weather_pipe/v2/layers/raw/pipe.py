@@ -50,6 +50,7 @@ def run_raw_layer(event: IngestToRawZone, adapter: IoAdapter) -> Result:
         .and_then(convert_json_to_df, table_path=config.get("table_path", []))
         .and_then(
             add_ingestion_columns,
+            location=api_config.location,
             batch_guid=adapter.get_guid(),
             date_time=start_time,
         )
