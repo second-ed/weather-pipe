@@ -4,7 +4,9 @@ import glob
 import os
 
 import polars as pl
-from returns.result import Failure, Result, Success, safe
+
+from weather_pipe.adapters.clock import fmt_time
+from weather_pipe.domain.result import Err, Ok, Result, safe
 
 
 @safe
@@ -13,7 +15,7 @@ def combine_parquets(load_path: str, save_dir: str) -> str:
     lf = pl.scan_parquet(load_path)
     os.makedirs(save_dir, exist_ok=True)
     lf.sink_parquet(
-        f"{save_dir}/{os.path.basename(load_path.replace('*', date_time.strftime('%y%m%d_%H%M%S')))}",
+        f"{save_dir}/{os.path.basename(load_path.replace('*', fmt_time(date_time)))}",
     )
     return load_path
 
@@ -29,8 +31,8 @@ def delete_files(load_path: str) -> Result[bool, list]:
             fails.append((f, e))
 
     if fails:
-        return Failure(fails)
-    return Success(inner_value=True)
+        return Err(fails)
+    return Ok(inner_value=True)
 
 
 if __name__ == "__main__":
