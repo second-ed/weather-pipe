@@ -28,6 +28,7 @@ dev = [
     "pytest-cov>=6.0.0",
     "repo-mapper-rs>=0.3.0",
     "ruff>=0.9.6",
+    "shandy-sqlfmt[jinjafmt]>=0.29.0",
 ]
 
 [tool.uv]

@@ -5,7 +5,6 @@
 ├── .github
 │   └── workflows
 │       ├── ci_tests.yaml
-│       ├── run_combine_parquet.yaml
 │       └── run_raw_layer.yaml
 ├── configs
 │   ├── config.yaml
@@ -35,8 +34,7 @@
 │       │   │   ├── __init__.py
 │       │   │   └── raw_pipe.py
 │       │   └── __init__.py
-│       ├── __init__.py
-│       └── script_000_combine_parquets.py
+│       └── __init__.py
 ├── tests
 │   ├── v2
 │   │   ├── pipelines
