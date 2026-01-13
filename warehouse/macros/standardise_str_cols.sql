@@ -1,7 +1,5 @@
 {% macro standardise_str_cols(relation) %}
-
     {% set cols = adapter.get_columns_in_relation(relation) %}
-
     {% set select_list = [] %}
 
     {% for col in cols %}
