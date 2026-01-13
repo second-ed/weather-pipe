@@ -44,9 +44,12 @@
 │   ├── __init__.py
 │   └── conftest.py
 ├── warehouse
+│   ├── macros
+│   │   └── standardise_str_cols.sql
 │   └── models
 │       └── bronze
-│           └── raw_to_bronze.sql
+│           ├── raw_to_bronze.sql
+│           └── standardise_str.sql
 ├── .pre-commit-config.yaml
 ├── README.md
 ├── dbt_project.yml
