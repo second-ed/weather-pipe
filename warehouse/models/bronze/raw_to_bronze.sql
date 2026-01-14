@@ -4,6 +4,9 @@ with
     staged as (
         select
             * exclude (sys_col_ingestion_datetime, filename),
+            condition.text as cond_text,
+            condition.icon as cond_icon,
+            condition.code as cond_code,
             time_epoch || '_' || location as time_epoch_location,
             sys_col_ingestion_datetime::timestamptz at time zone 'UTC'
             as sys_col_ingestion_datetime,
@@ -16,7 +19,7 @@ with
     ),
     deduped as (select * from staged where _rn = 1)
 
-select *
+select * exclude(condition)
 from deduped
 
 {% if is_incremental() %}

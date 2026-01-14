@@ -47,9 +47,13 @@
 │   ├── macros
 │   │   └── standardise_str_cols.sql
 │   └── models
-│       └── bronze
-│           ├── raw_to_bronze.sql
-│           └── standardise_str.sql
+│       ├── bronze
+│       │   ├── bronze.sql
+│       │   └── raw_to_bronze.sql
+│       └── silver
+│           ├── dim_condition.sql
+│           ├── dim_location.sql
+│           └── dim_wind_dir.sql
 ├── .pre-commit-config.yaml
 ├── README.md
 ├── dbt_project.yml
