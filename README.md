@@ -53,7 +53,8 @@
 │       └── silver
 │           ├── dim_condition.sql
 │           ├── dim_location.sql
-│           └── dim_wind_dir.sql
+│           ├── dim_wind_dir.sql
+│           └── fact_weather.sql
 ├── .pre-commit-config.yaml
 ├── README.md
 ├── dbt_project.yml

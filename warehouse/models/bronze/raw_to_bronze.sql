@@ -1,19 +1,18 @@
-{{ config(materialized="incremental", unique_key="time_epoch_location") }}
+{{ config(materialized="incremental", unique_key="fact_id") }}
 
 with
     staged as (
         select
+            hash(time_epoch || '_' || location) as fact_id,
             * exclude (sys_col_ingestion_datetime, filename),
             condition.text as cond_text,
             condition.icon as cond_icon,
             condition.code as cond_code,
-            time_epoch || '_' || location as time_epoch_location,
             sys_col_ingestion_datetime::timestamptz at time zone 'UTC'
             as sys_col_ingestion_datetime,
             filename as sys_col_filename,
             row_number() over (
-                partition by time_epoch_location
-                order by sys_col_ingestion_datetime desc
+                partition by fact_id order by sys_col_ingestion_datetime desc
             ) as _rn
         from read_parquet('./data/raw/liverpool/*.parquet', filename = true)
     ),
@@ -23,5 +22,5 @@ select * exclude(condition)
 from deduped
 
 {% if is_incremental() %}
-    where time_epoch_location not in (select time_epoch_location from {{ this }})
+    where fact_id not in (select fact_id from {{ this }})
 {% endif %}
