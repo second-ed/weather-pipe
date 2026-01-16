@@ -45,7 +45,7 @@
 │   └── conftest.py
 ├── warehouse
 │   ├── macros
-│   │   └── standardise_str_cols.sql
+│   │   └── utils.sql
 │   └── models
 │       ├── bronze
 │       │   ├── bronze.sql

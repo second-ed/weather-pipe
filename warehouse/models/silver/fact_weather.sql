@@ -5,6 +5,10 @@ with
 
         select
             *,
+            {{ cast("time", dbt.type_timestamp()) }} as timestamp,
+            date_part('hour', timestamp) as hour,
+            date_part('month', timestamp) as month,
+
             hash(lower(trim(location))) as location_id,
 
             hash(
