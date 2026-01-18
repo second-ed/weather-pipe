@@ -26,7 +26,7 @@ def convert_json_to_df(data: dict, table_path: list) -> pl.DataFrame:
             if len(data) > 0:
                 data = data[level]
                 continue
-            return {"err": "invalid level given for list"}
+            raise ValueError(f"invalid level given for list {level = }")
     return pl.DataFrame(data)
 
 
