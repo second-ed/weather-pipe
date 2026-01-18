@@ -50,6 +50,9 @@
 │       ├── bronze
 │       │   ├── bronze.sql
 │       │   └── raw_to_bronze.sql
+│       ├── gold
+│       │   ├── location_hourly_averages.sql
+│       │   └── location_monthly_averages.sql
 │       └── silver
 │           ├── dim_condition.sql
 │           ├── dim_location.sql
