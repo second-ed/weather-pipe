@@ -1,0 +1,332 @@
+version: 2
+models:
+- name: bronze
+  columns:
+  - name: fact_id
+    tests:
+    - unique
+    - not_null
+  - name: time_epoch
+    tests: []
+  - name: time
+    tests: []
+  - name: temp_c
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: -20
+          max_value: 60
+          inclusive: true
+  - name: temp_f
+    tests: []
+  - name: is_day
+    tests:
+    - accepted_values:
+        arguments:
+          values:
+          - 0
+          - 1
+          quote: false
+  - name: wind_mph
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 120
+          inclusive: true
+  - name: wind_kph
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 120
+          inclusive: true
+  - name: wind_degree
+    tests: []
+  - name: wind_dir
+    tests: []
+  - name: pressure_mb
+    tests: []
+  - name: pressure_in
+    tests: []
+  - name: precip_mm
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 120
+          inclusive: true
+  - name: precip_in
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 50
+          inclusive: true
+  - name: snow_cm
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 120
+          inclusive: true
+  - name: humidity
+    tests: []
+  - name: cloud
+    tests: []
+  - name: feelslike_c
+    tests: []
+  - name: feelslike_f
+    tests: []
+  - name: windchill_c
+    tests: []
+  - name: windchill_f
+    tests: []
+  - name: heatindex_c
+    tests: []
+  - name: heatindex_f
+    tests: []
+  - name: dewpoint_c
+    tests: []
+  - name: dewpoint_f
+    tests: []
+  - name: will_it_rain
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 1
+          inclusive: true
+  - name: chance_of_rain
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 100
+          inclusive: true
+  - name: will_it_snow
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 1
+          inclusive: true
+  - name: chance_of_snow
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 100
+          inclusive: true
+  - name: vis_km
+    tests: []
+  - name: vis_miles
+    tests: []
+  - name: gust_mph
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 120
+          inclusive: true
+  - name: gust_kph
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 120
+          inclusive: true
+  - name: uv
+    tests: []
+  - name: location
+    tests:
+    - accepted_values:
+        arguments:
+          values:
+          - liverpool
+          - Liverpool
+  - name: sys_col_row_guid
+    tests:
+    - not_null
+  - name: sys_col_batch_guid
+    tests:
+    - not_null
+  - name: cond_text
+    tests: []
+  - name: cond_icon
+    tests: []
+  - name: cond_code
+    tests: []
+  - name: sys_col_ingestion_datetime
+    tests:
+    - not_null
+  - name: sys_col_filename
+    tests:
+    - not_null
+  - name: _rn
+    tests: []
+- name: raw_to_bronze
+  columns:
+  - name: fact_id
+    tests:
+    - unique
+    - not_null
+  - name: time_epoch
+    tests: []
+  - name: time
+    tests: []
+  - name: temp_c
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: -20
+          max_value: 60
+          inclusive: true
+  - name: temp_f
+    tests: []
+  - name: is_day
+    tests:
+    - accepted_values:
+        arguments:
+          values:
+          - 0
+          - 1
+          quote: false
+  - name: wind_mph
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 120
+          inclusive: true
+  - name: wind_kph
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 120
+          inclusive: true
+  - name: wind_degree
+    tests: []
+  - name: wind_dir
+    tests: []
+  - name: pressure_mb
+    tests: []
+  - name: pressure_in
+    tests: []
+  - name: precip_mm
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 120
+          inclusive: true
+  - name: precip_in
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 50
+          inclusive: true
+  - name: snow_cm
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 120
+          inclusive: true
+  - name: humidity
+    tests: []
+  - name: cloud
+    tests: []
+  - name: feelslike_c
+    tests: []
+  - name: feelslike_f
+    tests: []
+  - name: windchill_c
+    tests: []
+  - name: windchill_f
+    tests: []
+  - name: heatindex_c
+    tests: []
+  - name: heatindex_f
+    tests: []
+  - name: dewpoint_c
+    tests: []
+  - name: dewpoint_f
+    tests: []
+  - name: will_it_rain
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 1
+          inclusive: true
+  - name: chance_of_rain
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 100
+          inclusive: true
+  - name: will_it_snow
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 1
+          inclusive: true
+  - name: chance_of_snow
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 100
+          inclusive: true
+  - name: vis_km
+    tests: []
+  - name: vis_miles
+    tests: []
+  - name: gust_mph
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 120
+          inclusive: true
+  - name: gust_kph
+    tests:
+    - dbt_utils.accepted_range:
+        arguments:
+          min_value: 0
+          max_value: 120
+          inclusive: true
+  - name: uv
+    tests: []
+  - name: location
+    tests:
+    - accepted_values:
+        arguments:
+          values:
+          - liverpool
+          - Liverpool
+  - name: sys_col_row_guid
+    tests:
+    - not_null
+  - name: sys_col_batch_guid
+    tests:
+    - not_null
+  - name: cond_text
+    tests: []
+  - name: cond_icon
+    tests: []
+  - name: cond_code
+    tests: []
+  - name: sys_col_ingestion_datetime
+    tests:
+    - not_null
+  - name: sys_col_filename
+    tests:
+    - not_null
+  - name: _rn
+    tests: []

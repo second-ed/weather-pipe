@@ -9,6 +9,9 @@
 ├── configs
 │   ├── config.yaml
 │   └── raw_layer.yaml
+├── dev_tools
+│   ├── __init__.py
+│   └── create_test_schemas.py
 ├── docs
 │   └── dev_readme.md
 ├── src
@@ -49,20 +52,27 @@
 │   └── models
 │       ├── bronze
 │       │   ├── bronze.sql
-│       │   └── raw_to_bronze.sql
+│       │   ├── raw_to_bronze.sql
+│       │   └── schema.yaml
 │       ├── gold
 │       │   ├── location_hourly_averages.sql
-│       │   └── location_monthly_averages.sql
+│       │   ├── location_monthly_averages.sql
+│       │   └── schema.yaml
 │       └── silver
 │           ├── dim_condition.sql
 │           ├── dim_location.sql
 │           ├── dim_wind_dir.sql
-│           └── fact_weather.sql
+│           ├── fact_weather.sql
+│           └── schema.yaml
 ├── .pre-commit-config.yaml
 ├── README.md
 ├── dbt_project.yml
+├── package-lock.yml
+├── packages.yml
 ├── pyproject.toml
 ├── ruff.toml
 └── uv.lock
+
+(generated with repo-mapper-rs)
 ::
 ```
