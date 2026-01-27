@@ -49,4 +49,5 @@ def read_yaml(path: str | Path, **kwargs: dict) -> dict:
 @register_domain_write_fn(Zone.RAW, FileType.PARQUET)
 @safe
 def write_parquet(df: pl.DataFrame, path: str | Path, **kwargs: dict) -> None:
+    Path(path).parent.mkdir(parents=True, exist_ok=True)
     df.write_parquet(path, **kwargs)
