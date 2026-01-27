@@ -78,7 +78,7 @@ jobs:
           warehouse:
             target: ci
             outputs:
-              ci:
+              dev:
                 type: duckdb
                 path: ./dev.duckdb
                 threads: 4
