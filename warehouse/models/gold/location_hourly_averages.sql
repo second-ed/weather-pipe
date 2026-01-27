@@ -19,7 +19,7 @@ select
     avg(f.heatindex_c) as heatindex_c,
     avg(f.dewpoint_c) as dewpoint_c,
     avg(f.vis_km) as vis_km
-from fact_weather f
-join dim_location d on f.location_id = d.id
+from {{ ref("fact_weather") }} f
+join {{ ref("dim_location") }} d on f.location_id = d.id
 group by f.hour, d.location
 order by d.location, f.hour
