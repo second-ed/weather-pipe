@@ -4,7 +4,7 @@ __pycache__/
 *$py.class
 
 *.ruff_cache/
-
+dbt_packages/
 *deprecated*
 *my_config.yaml
 *scrap/
