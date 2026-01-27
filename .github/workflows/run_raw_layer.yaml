@@ -71,10 +71,25 @@ jobs:
       - name: Install the project
         run: uv sync
 
-      - name: run at 1am UTC
+      - name: Create dbt profiles.yml
+        run: |
+          mkdir -p ~/.dbt
+          cat > ~/.dbt/profiles.yml << 'EOF'
+          warehouse:
+            target: ci
+            outputs:
+              ci:
+                type: duckdb
+                path: ./dev.duckdb
+                threads: 4
+            target: dev
+          EOF
+
+      - name: run warehouse stuff
         run: |
           git status
           git pull --ff-only origin main
+          uv run dbt deps
           uv run dbt run
           uv run dbt test
 
