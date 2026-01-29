@@ -88,7 +88,8 @@ jobs:
       - name: run warehouse stuff
         run: |
           git status
-          git pull --ff-only origin main
+          git fetch origin
+          git rebase origin/main
           uv run dbt deps
           uv run dbt run
           uv run dbt test
@@ -104,8 +105,6 @@ jobs:
           git status
           git add dev.duckdb
           if ! git diff --cached --quiet; then
-            git fetch origin
-            git rebase origin/main
             git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
             git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git main
           else
