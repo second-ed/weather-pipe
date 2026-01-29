@@ -104,6 +104,8 @@ jobs:
           git status
           git add dev.duckdb
           if ! git diff --cached --quiet; then
+            git fetch origin
+            git rebase origin/main
             git commit -m "${{ env.CI_COMMIT_MESSAGE }}"
             git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git main
           else
