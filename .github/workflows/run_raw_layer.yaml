@@ -52,6 +52,7 @@ jobs:
 
   warehouse:
     runs-on: ubuntu-latest
+    needs: raw_layer
 
     permissions:
       contents: write
